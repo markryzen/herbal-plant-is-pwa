@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="fil" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="fil">
+<title>Halamang Gamot — Herbal Plant Identification &amp; Information System</title>
+
+<!-- PWA setup -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E3A2B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Herbal IS">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#1E3A2B;
+  --forest-light:#2F5240;
+  --sage:#8AA68A;
+  --sage-dim:#B9C9AF;
+  --parchment:#F1EADA;
+  --parchment-dark:#E3D9C2;
+  --card:#FBF8F0;
+  --gold:#B5852E;
+  --gold-deep:#8C641F;
+  --ink:#2B2118;
+  --ink-soft:#5B4E3E;
+  --clay:#9C5335;
+  --line: rgba(43,33,24,0.12);
+  --shadow: 0 10px 30px rgba(30,58,43,0.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(138,166,138,0.25), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(181,133,46,0.18), transparent 40%),
+    var(--forest);
+  font-family:'Inter', sans-serif;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 12px;
+}
+.page-caption{
+  position:fixed; top:14px; left:0; right:0; text-align:center;
+  color:rgba(241,234,218,0.55); font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+  font-family:'Inter',sans-serif; pointer-events:none;
+}
+/* ---------- Phone frame ---------- */
+.phone{
+  width:390px; max-width:100%;
+  height:844px; max-height:92vh;
+  background:var(--parchment);
+  border-radius:44px;
+  border:10px solid #14241A;
+  box-shadow:var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.04);
+  position:relative;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.notch{
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:150px; height:26px; background:#14241A; border-radius:0 0 18px 18px; z-index:50;
+}
+.statusbar{
+  height:44px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+  padding:0 26px; font-size:13px; font-weight:600; color:var(--ink); font-family:'Inter';
+  background:transparent; position:relative; z-index:10;
+}
+
+/* ---------- Real mobile devices: fill the whole screen, no decorative frame ---------- */
+/* The bordered "phone mockup" look above is only meant for previewing on a
+   desktop/laptop browser. On an actual phone it would show up as a phone
+   inside a phone, wasting screen space — so on narrow/real mobile viewports
+   we drop the frame, notch, fake status bar, and caption entirely. */
+@media (max-width: 520px){
+  body{ padding:0; align-items:stretch; }
+  .page-caption{ display:none; }
+  .phone{
+    width:100vw; max-width:100vw;
+    height:100vh; height:100dvh; max-height:none;
+    border:none; border-radius:0; box-shadow:none;
+  }
+  .notch{ display:none; }
+  .statusbar{ display:none; }
+  .screens{ padding-top:env(safe-area-inset-top, 16px); }
+  .navbar{
+    height:auto; min-height:70px;
+    padding-bottom:env(safe-area-inset-bottom, 10px);
+  }
+  .navbtn{ font-size:13px; gap:5px; padding:10px 2px 8px; }
+  .navbtn svg{ width:27px; height:27px; }
+  .navbtn.scanbtn{ top:-16px; }
+  .navbtn.scanbtn .scanicon-wrap{ width:60px; height:60px; }
+  .navbtn.scanbtn svg{ width:29px; height:29px; }
+}
+/* When installed/launched as a standalone PWA (from Home Screen), always go
+   fullscreen regardless of viewport width detection above. */
+@media (display-mode: standalone){
+  body{ padding:0; align-items:stretch; }
+  .page-caption{ display:none; }
+  .phone{
+    width:100vw; max-width:100vw;
+    height:100vh; height:100dvh; max-height:none;
+    border:none; border-radius:0; box-shadow:none;
+  }
+  .notch{ display:none; }
+  .statusbar{ display:none; }
+  .screens{ padding-top:env(safe-area-inset-top, 16px); }
+  .navbar{
+    height:auto; min-height:70px;
+    padding-bottom:env(safe-area-inset-bottom, 10px);
+  }
+  .navbtn{ font-size:13px; gap:5px; padding:10px 2px 8px; }
+  .navbtn svg{ width:27px; height:27px; }
+  .navbtn.scanbtn{ top:-16px; }
+  .navbtn.scanbtn .scanicon-wrap{ width:60px; height:60px; }
+  .navbtn.scanbtn svg{ width:29px; height:29px; }
+}
+.statusbar .icons{display:flex; gap:5px; align-items:center;}
+.screens{ flex:1 1 auto; position:relative; overflow:hidden; }
+.screen{
+  position:absolute; inset:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  opacity:0; pointer-events:none; transform:translateY(8px);
+  transition:opacity .25s ease, transform .25s ease;
+  padding-bottom:90px;
+}
+.screen.active{ opacity:1; pointer-events:auto; transform:translateY(0); }
+.screen::-webkit-scrollbar{width:0;}
+
+/* ---------- Bottom nav ---------- */
+.navbar{
+  position:absolute; left:0; right:0; bottom:0; height:78px;
+  background:rgba(251,248,240,0.92); backdrop-filter:blur(6px);
+  border-top:1px solid var(--line);
+  display:flex; z-index:40;
+}
+.navbtn{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; background:none; border:none; color:var(--ink-soft); font-family:'Inter';
+  font-size:9.5px; font-weight:600; letter-spacing:.01em; cursor:pointer; padding:8px 2px 12px;
+  white-space:nowrap;
+}
+.navbtn svg{ width:19px; height:19px; stroke:var(--ink-soft); fill:none; stroke-width:1.7; }
+.navbtn.active{ color:var(--forest); }
+.navbtn.active svg{ stroke:var(--forest); }
+.navbtn.scanbtn{ position:relative; top:-16px; }
+.navbtn.scanbtn .scanicon-wrap{
+  width:52px;height:52px;border-radius:50%; background:linear-gradient(160deg, var(--gold), var(--gold-deep));
+  display:flex; align-items:center; justify-content:center; box-shadow:0 8px 18px rgba(140,100,31,0.45);
+  margin-bottom:2px;
+}
+.navbtn.scanbtn svg{ stroke:#fff; width:24px; height:24px; }
+
+/* ---------- Typography helpers ---------- */
+h1,h2,h3,.display{ font-family:'Fraunces', serif; color:var(--forest); margin:0; }
+.eyebrow{ font-family:'Inter'; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--clay); font-weight:700; }
+.script{ font-family:'Caveat', cursive; }
+p{ line-height:1.55; color:var(--ink-soft); margin:0; }
+
+/* ---------- Home screen ---------- */
+.home-header{ padding:6px 22px 0; }
+.home-header .greet{ font-size:13px; color:var(--ink-soft); }
+.home-header h1{ font-size:26px; line-height:1.15; margin-top:2px; }
+.home-header .accent{ color:var(--gold-deep); font-style:italic; }
+
+.hero{
+  margin:18px 20px 6px; padding:22px 20px; border-radius:22px;
+  background: linear-gradient(155deg, var(--forest), var(--forest-light));
+  color:var(--parchment); position:relative; overflow:hidden;
+  box-shadow: 0 12px 24px rgba(30,58,43,0.28);
+}
+.hero .leafwatermark{ position:absolute; right:-18px; top:-18px; opacity:.16; width:150px; }
+.hero .eyebrow{ color:var(--sage-dim); }
+.hero h2{ color:#fff; font-size:20px; margin:6px 0 8px; max-width:220px; line-height:1.25; }
+.hero p{ color:rgba(241,234,218,0.75); font-size:13px; max-width:230px; }
+.hero .scan-cta{
+  margin-top:14px; display:inline-flex; align-items:center; gap:8px;
+  background:var(--gold); color:#20180a; font-weight:700; font-size:13.5px;
+  padding:10px 16px; border-radius:30px; border:none; cursor:pointer;
+  box-shadow:0 6px 14px rgba(181,133,46,0.4);
+}
+.hero .scan-cta svg{ width:16px; height:16px; stroke:#20180a; fill:none; stroke-width:2; }
+
+.stats-row{ display:flex; gap:10px; margin:16px 20px; }
+.stat-card{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 10px; text-align:center; }
+.stat-card .num{ font-family:'Fraunces'; font-size:22px; color:var(--forest); font-weight:700; }
+.stat-card .lab{ font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; margin-top:2px; }
+
+.section-title{ display:flex; align-items:baseline; justify-content:space-between; margin:22px 20px 10px; }
+.section-title h3{ font-size:16px; }
+.section-title .see-all{ font-size:12px; color:var(--clay); font-weight:600; cursor:pointer; background:none; border:none; font-family:'Inter'; }
+
+.chiprow{ display:flex; gap:8px; padding:0 20px; overflow-x:auto; margin-bottom:6px; }
+.chip{ flex:0 0 auto; padding:7px 14px; border-radius:20px; background:var(--parchment-dark); font-size:12px; font-weight:600; color:var(--ink-soft); border:1px solid var(--line); cursor:pointer; white-space:nowrap;}
+.chip.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+
+.carousel{ display:flex; gap:12px; padding:2px 20px 6px; overflow-x:auto; }
+.spec-card{
+  flex:0 0 148px; background:var(--card); border-radius:18px; padding:14px 12px 12px;
+  border:1px solid var(--line); position:relative; cursor:pointer;
+  box-shadow:0 6px 14px rgba(30,58,43,0.06);
+}
+.spec-card:before{ /* washi tape */
+  content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%) rotate(-3deg);
+  width:46px; height:16px; background:repeating-linear-gradient(45deg, rgba(181,133,46,0.55) 0 4px, rgba(181,133,46,0.35) 4px 8px);
+  border-radius:2px; box-shadow:0 2px 3px rgba(0,0,0,0.12);
+}
+.spec-card .icon-wrap{ width:100%; height:78px; display:flex; align-items:center; justify-content:center; }
+.spec-card .icon-wrap svg{ width:56px; height:56px; }
+.spec-card .name{ font-family:'Fraunces'; font-weight:600; font-size:14px; color:var(--forest); margin-top:6px; text-align:center;}
+.spec-card .sci{ font-size:10px; color:var(--ink-soft); font-style:italic; text-align:center; margin-top:1px;}
+.spec-card .tag{ display:block; margin:8px auto 0; font-size:9.5px; text-align:center; color:var(--clay); font-weight:700; text-transform:uppercase; letter-spacing:.04em;}
+
+/* ---------- Library screen ---------- */
+.lib-header{ padding:20px 20px 4px; }
+.searchbar{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin:14px 20px 4px; }
+.searchbar input{ border:none; outline:none; background:none; font-family:'Inter'; font-size:13.5px; flex:1; color:var(--ink); }
+.searchbar svg{ width:17px; height:17px; stroke:var(--ink-soft); fill:none; stroke-width:2; }
+.mic-btn{ border:none; background:var(--forest); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
+.mic-btn svg{ width:15px; height:15px; stroke:#fff; fill:none; stroke-width:2; }
+.mic-btn.listening{ background:var(--clay); animation:pulse 1s infinite; }
+@keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(156,83,53,0.5);} 70%{box-shadow:0 0 0 10px rgba(156,83,53,0);} 100%{box-shadow:0 0 0 0 rgba(156,83,53,0);} }
+.voice-hint{ font-size:11px; color:var(--ink-soft); margin:2px 22px 0; }
+
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px 20px 10px; }
+.grid .spec-card{ flex:none; width:100%; }
+.empty-state{ text-align:center; padding:40px 30px; color:var(--ink-soft); font-size:13px; }
+
+/* ---------- Detail screen ---------- */
+.detail-hero{ background:linear-gradient(165deg, var(--forest), var(--forest-light)); padding:50px 22px 26px; position:relative; }
+.back-btn{ position:absolute; top:16px; left:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.back-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2.2; }
+.detail-hero .icon-wrap{ width:120px; height:120px; margin:0 auto; background:rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.18);}
+.detail-hero .icon-wrap svg{ width:74px; height:74px; }
+.detail-hero h2{ color:#fff; text-align:center; margin-top:14px; font-size:23px; }
+.detail-hero .sci{ text-align:center; color:var(--sage-dim); font-style:italic; font-size:13px; margin-top:2px; }
+.detail-hero .taglist{ display:flex; justify-content:center; gap:6px; margin-top:12px; flex-wrap:wrap;}
+.detail-hero .tagpill{ font-size:10.5px; background:rgba(255,255,255,0.14); color:#fff; padding:4px 10px; border-radius:20px; }
+
+.detail-body{ padding:20px 22px 10px; }
+.local-names{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 18px;}
+.local-names span{ background:var(--parchment-dark); color:var(--ink-soft); font-size:11.5px; padding:5px 10px; border-radius:10px; }
+.dblock{ margin-bottom:20px; }
+.dblock h4{ font-family:'Fraunces'; font-size:14px; color:var(--forest); display:flex; align-items:center; gap:7px; margin-bottom:7px;}
+.dblock h4 svg{ width:15px; height:15px; stroke:var(--gold-deep); fill:none; stroke-width:2;}
+.dblock p{ font-size:13.5px; }
+.dblock ul{ margin:0; padding-left:18px; }
+.dblock li{ font-size:13.5px; color:var(--ink-soft); line-height:1.6; }
+.caution-box{ background:#F7E9DD; border:1px solid rgba(156,83,53,0.3); border-radius:14px; padding:12px 14px; font-size:12.5px; color:var(--clay); }
+
+/* ---------- Scan screen ---------- */
+.scan-screen{ background:#0e1a13; height:100%; }
+.scan-view{ position:relative; height:100%; display:flex; flex-direction:column; }
+.scan-topbar{ position:absolute; top:16px; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:20; }
+.scan-topbar .back-btn{ position:static; background:rgba(255,255,255,0.14); }
+.scan-title{ color:#fff; font-size:13px; font-weight:600; font-family:'Inter'; background:rgba(0,0,0,0.3); padding:6px 12px; border-radius:20px;}
+.camera-wrap{ flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+#cam-video, #captured-img{ width:100%; height:100%; object-fit:cover; }
+.scan-frame{ position:absolute; inset:60px 40px; border:2px solid rgba(255,255,255,0.55); border-radius:24px; pointer-events:none; }
+.scan-frame:before, .scan-frame:after{ content:''; position:absolute; width:26px; height:26px; border-color:var(--gold); }
+.corner{ position:absolute; width:24px; height:24px; border:3px solid var(--gold); }
+.corner.tl{ top:-3px; left:-3px; border-right:none; border-bottom:none; border-top-left-radius:14px;}
+.corner.tr{ top:-3px; right:-3px; border-left:none; border-bottom:none; border-top-right-radius:14px;}
+.corner.bl{ bottom:-3px; left:-3px; border-right:none; border-top:none; border-bottom-left-radius:14px;}
+.corner.br{ bottom:-3px; right:-3px; border-left:none; border-top:none; border-bottom-right-radius:14px;}
+.scan-hint{ position:absolute; bottom:118px; left:0; right:0; text-align:center; color:rgba(255,255,255,0.8); font-size:12.5px; font-family:'Inter'; }
+.camera-off-msg{ color:rgba(255,255,255,0.65); font-size:13px; text-align:center; padding:0 40px; font-family:'Inter'; line-height:1.6; }
+.scan-controls{ padding:18px 24px 26px; display:flex; align-items:center; justify-content:center; gap:34px; background:#0e1a13; }
+.upload-btn, .cancel-btn{ width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.1); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.upload-btn svg, .cancel-btn svg{ width:20px; height:20px; stroke:#fff; fill:none; stroke-width:2;}
+.shutter{ width:70px; height:70px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,0.35); cursor:pointer; }
+.shutter:active{ transform:scale(0.93); }
+
+.analyzing-wrap{ position:absolute; inset:0; background:rgba(14,26,19,0.94); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; opacity:0; pointer-events:none; transition:opacity .3s; }
+.analyzing-wrap.show{ opacity:1; pointer-events:auto; }
+.ring{ width:64px; height:64px; border-radius:50%; border:4px solid rgba(181,133,46,0.25); border-top-color:var(--gold); animation:spin 0.9s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.analyzing-wrap .msg{ color:#fff; font-family:'Inter'; font-size:13px; letter-spacing:.02em; }
+.analyzing-wrap .sub{ color:rgba(255,255,255,0.5); font-size:11.5px; }
+
+/* ---------- Result screen ---------- */
+.result-wrap{ padding:26px 22px; }
+.result-badge{ display:flex; align-items:center; gap:8px; background:#E7F0E4; color:var(--forest); font-size:12px; font-weight:700; padding:7px 12px; border-radius:20px; width:fit-content; margin:0 auto 18px; }
+.result-badge svg{ width:14px; height:14px; stroke:var(--forest); fill:none; stroke-width:2.4;}
+.result-card{ background:var(--card); border:1px solid var(--line); border-radius:22px; padding:22px; text-align:center; box-shadow:0 10px 22px rgba(30,58,43,0.1); }
+.result-card .icon-wrap{ width:110px; height:110px; margin:0 auto 10px; border-radius:50%; background:var(--parchment-dark); display:flex; align-items:center; justify-content:center;}
+.result-card .icon-wrap svg{ width:64px; height:64px; }
+.result-card h2{ font-size:22px; }
+.result-card .sci{ font-style:italic; color:var(--ink-soft); font-size:13px; margin-top:2px;}
+.confidence{ margin:16px 0 4px; }
+.confidence .bar-bg{ height:8px; background:var(--parchment-dark); border-radius:6px; overflow:hidden; }
+.confidence .bar-fill{ height:100%; background:linear-gradient(90deg, var(--gold-deep), var(--gold)); border-radius:6px; width:0%; transition:width 1s ease; }
+.confidence .pct-row{ display:flex; justify-content:space-between; font-size:11px; color:var(--ink-soft); margin-top:5px;}
+.result-desc{ font-size:13px; margin:14px 0 4px; text-align:left; }
+.result-actions{ display:flex; gap:10px; margin-top:20px; }
+.btn-primary, .btn-secondary{ flex:1; padding:13px; border-radius:14px; font-weight:700; font-size:13.5px; border:none; cursor:pointer; font-family:'Inter'; }
+.btn-primary{ background:var(--forest); color:#fff; }
+.btn-secondary{ background:var(--parchment-dark); color:var(--forest); }
+.alt-matches{ margin-top:22px; }
+.alt-matches h4{ font-family:'Fraunces'; font-size:14px; color:var(--forest); margin-bottom:10px; }
+.alt-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line); cursor:pointer; }
+.alt-row .icon-wrap{ width:38px; height:38px; border-radius:10px; background:var(--parchment-dark); display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+.alt-row .icon-wrap svg{ width:24px; height:24px; }
+.alt-row .info{ flex:1; }
+.alt-row .info .n{ font-size:12.5px; font-weight:600; color:var(--ink); }
+.alt-row .info .p{ font-size:10.5px; color:var(--ink-soft); }
+.alt-row .p2{ font-size:11px; color:var(--gold-deep); font-weight:700; }
+
+/* ---------- About screen ---------- */
+.about-hero{ background:linear-gradient(165deg, var(--forest), var(--forest-light)); padding:34px 24px 26px; text-align:center; }
+.about-hero .badge{ width:70px; height:70px; margin:0 auto 12px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.2);}
+.about-hero .badge svg{ width:38px; height:38px; }
+.about-hero h2{ color:#fff; font-size:19px; line-height:1.3; }
+.about-hero p{ color:var(--sage-dim); font-size:12px; margin-top:6px; }
+.about-body{ padding:22px 24px; }
+.about-body h4{ font-family:'Fraunces'; color:var(--forest); font-size:14.5px; margin-bottom:8px; }
+.about-body p{ font-size:13px; margin-bottom:16px; }
+.obj-list{ list-style:none; padding:0; margin:0 0 18px; display:flex; flex-direction:column; gap:10px; }
+.obj-list li{ display:flex; gap:10px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+.obj-list .num{ font-family:'Fraunces'; color:var(--gold-deep); font-weight:700; font-size:14px; flex:0 0 auto; }
+.footer-note{ text-align:center; font-size:11px; color:var(--ink-soft); padding:10px 24px 24px; opacity:.8;}
+
+/* ---------- Train (AI) screen ---------- */
+.ai-status-badge{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:5px 11px; border-radius:20px; background:rgba(255,255,255,0.12); color:#fff; }
+.ai-status-badge .dot{ width:7px; height:7px; border-radius:50%; background:#E0A93A; }
+.ai-status-badge.ready .dot{ background:#6FCF7D; }
+.ai-status-badge.loading .dot{ animation:blink 1s infinite; }
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.train-header{ padding:20px 20px 4px; }
+.train-note{ margin:14px 20px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; font-size:12.5px; color:var(--ink-soft); line-height:1.55;}
+.train-note strong{ color:var(--forest); }
+.train-progress{ margin:0 20px 14px; display:flex; align-items:center; gap:10px; }
+.train-progress .bar-bg{ flex:1; height:7px; background:var(--parchment-dark); border-radius:5px; overflow:hidden; }
+.train-progress .bar-fill{ height:100%; background:linear-gradient(90deg, var(--gold-deep), var(--gold)); border-radius:5px; }
+.train-progress .lab{ font-size:11px; color:var(--ink-soft); font-weight:600; white-space:nowrap; }
+.train-list{ padding:0 20px 10px; display:flex; flex-direction:column; gap:10px; }
+.train-item{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 12px; }
+.train-item .icon-wrap{ width:44px; height:44px; border-radius:12px; background:var(--parchment-dark); display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+.train-item .icon-wrap svg{ width:28px; height:28px; }
+.train-item .info{ flex:1; min-width:0; }
+.train-item .info .n{ font-size:13px; font-weight:600; color:var(--ink); }
+.train-item .info .samples{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
+.train-item .info .samples.has-data{ color:var(--forest); font-weight:600; }
+.train-item .thumbs{ display:flex; gap:3px; margin-top:5px; }
+.train-item .thumbs img{ width:20px; height:20px; border-radius:5px; object-fit:cover; border:1px solid var(--line); }
+.train-add-btn{ width:36px; height:36px; border-radius:50%; background:var(--forest); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
+.train-add-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2.4; }
+.reset-ai-btn{ margin:6px 20px 26px; width:calc(100% - 40px); padding:12px; border-radius:14px; background:none; border:1px solid rgba(156,83,53,0.4); color:var(--clay); font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Inter';}
+.match-mode-tag{ display:inline-block; margin-top:10px; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
+.match-mode-tag.real{ background:#E7F0E4; color:var(--forest); }
+.match-mode-tag.demo{ background:#F7E9DD; color:var(--clay); }
+.low-confidence-note{ margin-top:10px; font-size:11.5px; color:var(--clay); background:#F7E9DD; border-radius:10px; padding:9px 12px; text-align:left; line-height:1.5; }
+
+/* ---------- Database status ---------- */
+.db-status-badge{ display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; padding:7px 13px; border-radius:20px; margin-top:10px; }
+.db-status-badge .dbdot{ width:7px; height:7px; border-radius:50%; }
+.db-status-badge.db-online{ background:#E7F0E4; color:var(--forest); }
+.db-status-badge.db-online .dbdot{ background:#2E7D46; }
+.db-status-badge.db-connecting{ background:#FBF1DE; color:var(--gold-deep); }
+.db-status-badge.db-connecting .dbdot{ background:var(--gold); animation:blink 1s infinite; }
+.db-status-badge.db-offline{ background:var(--parchment-dark); color:var(--ink-soft); }
+.db-status-badge.db-offline .dbdot{ background:#a89f8c; }
+.seed-db-btn{ margin-top:10px; width:100%; padding:12px; border-radius:14px; background:var(--forest); color:#fff; font-weight:700; font-size:12.5px; border:none; cursor:pointer; font-family:'Inter';}
+</style>
+</head>
+<body class="notranslate" translate="no">
+<div class="page-caption">Herbal Plant Identification &amp; Information System — Demo Prototype</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 5c3-3 11-3 14 0M3.5 7.5c2-2 7-2 9 0M6 10c1-1 3-1 4 0" stroke="#2B2118" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <svg width="20" height="11" viewBox="0 0 20 11" fill="none"><rect x="1" y="1" width="16" height="9" rx="2" stroke="#2B2118" stroke-width="1.2"/><rect x="2.5" y="2.5" width="12" height="6" rx="1" fill="#2B2118"/><rect x="18" y="3.5" width="1.5" height="4" rx="0.7" fill="#2B2118"/></svg>
+    </div>
+  </div>
+
+  <div class="screens">
+
+    <!-- ============ HOME ============ -->
+    <div class="screen active" id="screen-home">
+      <div class="home-header">
+        <div class="greet">Magandang araw! 🌿</div>
+        <h1>Kilalanin ang <span class="accent">halamang gamot</span> sa paligid mo.</h1>
+      </div>
+
+      <div class="hero">
+        <svg class="leafwatermark" viewBox="0 0 100 100"><path d="M50 5C20 20 10 55 30 90C60 75 85 45 50 5Z" fill="#fff"/></svg>
+        <div class="eyebrow">AI-Powered Scanner</div>
+        <h2>I-scan ang dahon, malaman agad kung ano ito.</h2>
+        <p>Gamitin ang camera para makilala ang halamang gamot sa loob ng ilang segundo.</p>
+        <button class="scan-cta" onclick="goToScan()">
+          <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M20 8V6a2 2 0 00-2-2h-2M20 16v2a2 2 0 01-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+          Simulan ang Scan
+        </button>
+        <button id="install-app-btn" onclick="installApp()" style="display:none;margin-top:10px;margin-left:8px;background:rgba(255,255,255,0.14);color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:30px;border:1px solid rgba(255,255,255,0.3);cursor:pointer;align-items:center;gap:7px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:#fff;fill:none;stroke-width:2;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          <span id="install-app-btn-label">📲 I-download ang App</span>
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="stat-total">25</div><div class="lab">Halaman</div></div>
+        <div class="stat-card"><div class="num">10</div><div class="lab">DOH-Approved</div></div>
+        <div class="stat-card"><div class="num">8</div><div class="lab">Kategorya</div></div>
+      </div>
+
+      <div class="section-title"><h3>I-explore ayon sa kategorya</h3></div>
+      <div class="chiprow" id="home-chips"></div>
+
+      <div class="section-title"><h3>Kilalang Halamang Gamot</h3><button class="see-all" onclick="showScreen('library')">Tingnan lahat</button></div>
+      <div class="carousel" id="home-carousel"></div>
+
+      <div class="section-title"><h3>Bagong Idinagdag</h3></div>
+      <div class="carousel" id="home-carousel2"></div>
+    </div>
+
+    <!-- ============ LIBRARY ============ -->
+    <div class="screen" id="screen-library">
+      <div class="lib-header">
+        <div class="eyebrow">Aklatan ng Halaman</div>
+        <h1 style="font-size:22px;">Herbal Library</h1>
+      </div>
+      <div class="searchbar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search-input" placeholder="Hanapin ang pangalan ng halaman..." oninput="filterLibrary()">
+        <button class="mic-btn" id="mic-btn" onclick="toggleVoiceSearch()">
+          <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
+        </button>
+      </div>
+      <div class="voice-hint" id="voice-hint">Pindutin ang mic para sabihin ang pangalan ng halaman.</div>
+      <div class="chiprow" id="lib-chips" style="margin-top:14px;"></div>
+      <div class="grid" id="library-grid"></div>
+    </div>
+
+    <!-- ============ SCAN ============ -->
+    <div class="screen scan-screen" id="screen-scan">
+      <div class="scan-view">
+        <div class="scan-topbar">
+          <button class="back-btn" onclick="showScreen('home')">
+            <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="scan-title">AI Plant Scanner</div>
+          <div id="ai-status-badge" class="ai-status-badge loading"><span class="dot"></span><span id="ai-status-text">Loading AI</span></div>
+        </div>
+        <div class="camera-wrap" id="camera-wrap">
+          <video id="cam-video" autoplay playsinline muted></video>
+          <img id="captured-img" style="display:none;">
+          <div class="scan-frame" id="scan-frame">
+            <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+          </div>
+          <div class="camera-off-msg" id="camera-off-msg" style="display:none;"></div>
+          <div class="analyzing-wrap" id="analyzing-wrap">
+            <div class="ring"></div>
+            <div class="msg" id="analyzing-msg">Sinusuri ang larawan gamit ang AI...</div>
+            <div class="sub">Naghahambing sa 25 herbal species</div>
+          </div>
+        </div>
+        <div class="scan-hint" id="scan-hint">Ilagay ang dahon sa loob ng frame</div>
+        <div class="scan-controls">
+          <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6"/></svg>
+          </button>
+          <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none;" onchange="handleFileUpload(event)">
+          <button class="shutter" id="shutter-btn" onclick="capturePhoto()"></button>
+          <button class="cancel-btn" onclick="showScreen('home')">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RESULT ============ -->
+    <div class="screen" id="screen-result">
+      <div class="result-wrap">
+        <div class="result-badge">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          Nakita ang Pagtutugma
+        </div>
+        <div class="result-card">
+          <div class="icon-wrap" id="result-icon"></div>
+          <h2 id="result-name">—</h2>
+          <div class="sci" id="result-sci">—</div>
+          <div><span class="match-mode-tag" id="result-mode-tag">—</span></div>
+          <div id="result-low-confidence" class="low-confidence-note" style="display:none;"></div>
+          <div class="confidence">
+            <div class="bar-bg"><div class="bar-fill" id="conf-bar"></div></div>
+            <div class="pct-row"><span>Confidence Level</span><span id="conf-pct">—</span></div>
+          </div>
+          <p class="result-desc" id="result-desc">—</p>
+          <div class="result-actions">
+            <button class="btn-secondary" onclick="goToScan()">Ulitin ang Scan</button>
+            <button class="btn-primary" id="result-view-btn">Tingnan ang Detalye</button>
+          </div>
+        </div>
+        <div class="alt-matches">
+          <h4>Ibang posibleng tugma</h4>
+          <div id="alt-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DETAIL ============ -->
+    <div class="screen" id="screen-detail">
+      <div class="detail-hero">
+        <button class="back-btn" onclick="goBackFromDetail()">
+          <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="icon-wrap" id="detail-icon"></div>
+        <h2 id="detail-name">—</h2>
+        <div class="sci" id="detail-sci">—</div>
+        <div class="taglist" id="detail-tags"></div>
+      </div>
+      <div class="detail-body">
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><path d="M4 12h16M4 6h16M4 18h10"/></svg>Ibang Tawag</h4>
+          <div class="local-names" id="detail-localnames"></div>
+        </div>
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Deskripsyon</h4>
+          <p id="detail-desc">—</p>
+        </div>
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>Ginagamit na Bahagi</h4>
+          <p id="detail-parts">—</p>
+        </div>
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>Medisinal na Gamit</h4>
+          <ul id="detail-uses"></ul>
+        </div>
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a5 5 0 0110-1 5 5 0 0110 1c0 5.5-7 10-7 10z"/></svg>Benepisyo</h4>
+          <ul id="detail-benefits"></ul>
+        </div>
+        <div class="dblock">
+          <h4><svg viewBox="0 0 24 24"><path d="M3 17l9-13 9 13z"/><path d="M12 10v3M12 15h.01"/></svg>Paraan ng Paggamit</h4>
+          <p id="detail-prep">—</p>
+        </div>
+        <div class="dblock">
+          <div class="caution-box" id="detail-caution">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TRAIN AI ============ -->
+    <div class="screen" id="screen-train">
+      <div class="train-header">
+        <div class="eyebrow">AI Model Training</div>
+        <h1 style="font-size:22px;">Sanayin ang AI</h1>
+      </div>
+      <div class="train-note">
+        <strong>Paano ito gumagana:</strong> Gumagamit ang app ng MobileNet (pre-trained deep learning model) para "basahin" ang katangian ng bawat larawan, tapos ikinukumpara ito (k-Nearest Neighbors) sa mga sample photo na idadagdag mo dito. Kung mas maraming sample sa bawat halaman (3-5 minimum), mas tumpak ang scan. Kapag naka-connect sa Firestore, awtomatiko itong naka-sync sa cloud — kaya gumagana ang scanning kahit sa ibang device (hal. phone), hindi lang sa device na ginamit mo sa pag-train.
+      </div>
+      <div class="train-progress">
+        <div class="bar-bg"><div class="bar-fill" id="train-overall-bar" style="width:0%;"></div></div>
+        <div class="lab" id="train-overall-lab">0 / 25 trained</div>
+      </div>
+      <div id="auto-train-banner" style="display:none; align-items:center; gap:8px; margin:0 20px 14px; background:var(--forest); color:#fff; border-radius:12px; padding:10px 14px; font-size:12px; font-weight:600;">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;flex:0 0 auto;animation:spin 1s linear infinite;"><path d="M12 2a10 10 0 100 20"/></svg>
+        <span id="auto-train-banner-text">Ina-train ang AI...</span>
+      </div>
+      <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+      <div class="chiprow" id="train-chips" style="margin-bottom:10px;"></div>
+      <div class="train-list" id="train-list"></div>
+      <button id="retrain-btn" class="reset-ai-btn" onclick="manualRetrain()" style="margin-bottom:8px;">⚡ I-retrain gamit ang bundled na sample photos</button>
+      <button class="reset-ai-btn" onclick="resetTrainingData()">I-reset ang lahat ng training data</button>
+      <input type="file" id="train-file-input" accept="image/*" capture="environment" style="display:none;" onchange="handleTrainUpload(event)">
+    </div>
+
+    <!-- ============ ABOUT ============ -->
+    <div class="screen" id="screen-about">
+      <div class="about-hero">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M12 2C7 5 5 12 8 20c6-3 10-9 4-18Z"/></svg></div>
+        <h2>Herbal Plant Identification<br>&amp; Information System</h2>
+        <p>Isang Mobile Application Thesis Project</p>
+      </div>
+      <div class="about-body">
+        <h4>Tungkol sa Proyekto</h4>
+        <p>Ang sistemang ito ay isang mobile application na tumutulong sa mga user na makilala ang mga karaniwang halamang gamot sa Pilipinas gamit ang camera-based scanning, at magbigay ng maaasahang impormasyon tungkol sa kanilang katangian, gamit, at benepisyo.</p>
+
+        <h4>Layunin ng Pag-aaral</h4>
+        <ul class="obj-list">
+          <li><span class="num">01</span><span>Bumuo ng mobile application na nagbibigay-daan sa mga user na makilala ang karaniwang halamang gamot sa pamamagitan ng imahe o search feature, na tumutugon sa kahirapan ng mga user na makilala ang mga halamang magkatulad ang anyo.</span></li>
+          <li><span class="num">02</span><span>Gumawa ng sentralisado at organisadong database na naglalaman ng tumpak na impormasyon tungkol sa mga halamang gamot na karaniwang matatagpuan sa Pilipinas, kasama ang kanilang pangalan, katangian, medisinal na gamit, at benepisyo.</span></li>
+          <li><span class="num">03</span><span>Idisenyo ang mobile-based system na nagbibigay ng agarang access sa impormasyon ng halamang gamot anumang oras at lugar, na tumutugon sa abala at pagkaantala ng tradisyunal na pananaliksik gaya ng mga libro at online searching.</span></li>
+          <li><span class="num">04</span><span>Isama ang voice recognition feature na nagbibigay-daan sa mga user na maghanap ng impormasyon sa pamamagitan ng pagsasalita sa halip na pag-type, na tumutugon sa limitasyon ng text-based input.</span></li>
+        </ul>
+
+        <h4>Impormasyon ng Proyekto</h4>
+        <ul class="obj-list">
+          <li><span class="num">🎓</span><span><strong>Kurso:</strong> Bachelor of Science in Computer Science</span></li>
+          <li><span class="num">🏫</span><span><strong>Paaralan:</strong> Regis Marie College, Parañaque City</span></li>
+        </ul>
+
+        <h4>Tungkol sa Plant Database</h4>
+        <p>Ang plant information ay naka-store sa <strong>Firebase Firestore</strong>, isang cloud database — instant na naa-access ng app kahit saan, at pwede itong i-update nang hindi kailangang baguhin ang code. Kung hindi pa naka-connect, gumagamit ang app ng local copy ng datos para tuloy-tuloy pa rin ang demo.</p>
+        <div id="db-status-badge" class="db-status-badge db-offline"><span class="dbdot"></span>Checking database...</div><br>
+        <button class="seed-db-btn" onclick="seedFirestore()">☁️ I-upload ang Plant Data sa Firestore</button>
+
+        <h4 style="margin-top:20px;">Tungkol sa AI Plant Scanner</h4>
+        <p>Gumagamit ang scanner ng <strong>MobileNet</strong>, isang pre-trained deep learning/CNN model, bilang feature extractor — direkta itong tumatakbo sa loob ng browser/app gamit ang TensorFlow.js, walang kailangang external server. Ang bawat larawang naka-scan ay ikinukumpara (k-Nearest Neighbors classification) sa mga sample photo na na-train sa "Train AI" tab. Ito ang tinatawag na <em>transfer learning</em> — isang praktikal na paraan ng image classification na hindi nangangailangan ng malaking dataset o GPU training mula sa simula, angkop para sa mobile-based application.</p>
+        <p>Kailangan munang magdagdag ng ilang sample photo bawat halaman sa "Train AI" tab bago maging tumpak ang recognition. Kung wala pang sapat na training data, gagamit ang app ng demo-mode matching para maipakita pa rin ang buong daloy ng sistema.</p>
+      </div>
+      <div class="footer-note">Herbal IS Prototype · v1.0 · Built for thesis defense</div>
+    </div>
+
+  </div>
+
+  <div class="navbar">
+    <button class="navbtn active" data-screen="home" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home
+    </button>
+    <button class="navbtn" data-screen="library" onclick="showScreen('library')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Library
+    </button>
+    <button class="navbtn scanbtn" data-screen="scan" onclick="goToScan()">
+      <div class="scanicon-wrap scan-icon-wrap" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#B5852E,#8C641F);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(140,100,31,0.45);margin-bottom:2px;">
+        <svg viewBox="0 0 24 24" style="stroke:#fff;width:24px;height:24px;"><path d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M20 8V6a2 2 0 00-2-2h-2M20 16v2a2 2 0 01-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+      </div>Scan
+    </button>
+    <button class="navbtn" data-screen="train" onclick="showScreen('train')">
+      <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M6 10v2a6 6 0 0012 0v-2M12 18v3M9 21h6"/></svg>Train AI
+    </button>
+    <button class="navbtn" data-screen="about" onclick="showScreen('about')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About
+    </button>
+  </div>
+</div>
+
+<!-- Real on-device AI: TensorFlow.js + MobileNet feature extractor (transfer learning / kNN classification) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+<!-- Firebase (Firestore) — cloud database for the Plant Information collection -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ================= PLANT DATABASE ================= */
+const DEFAULT_PLANTS = [
+  {id:1,name:"Lagundi",sci:"Vitex negundo",local:["5-Leaved Chaste Tree","Molave-dilaw"],cat:"Respiratory",color:0,
+   desc:"Isang mababang punongkahoy na may limang-lobed na dahon at karaniwang tumutubo sa mga bukid at kapatagan sa buong Pilipinas. Kilala bilang isa sa 10 DOH-approved na halamang gamot.",
+   parts:"Dahon at ugat.",
+   uses:["Panggamot sa ubo at hika (asthma)","Pantunaw ng plema","Panlaban sa lagnat at sipon","Pampakalma sa lalamunan"],
+   benefits:["Anti-inflammatory","May antihistamine effect","Nagpapaluwag ng daanan ng hininga"],
+   prep:"Pakuluan ang 6 kutsarang tuyong dahon sa 2 tasang tubig ng 15 minuto. Inumin 3 beses sa isang araw.",
+   caution:"Iwasan ng buntis na kababaihan. Kumunsulta sa doktor kung matagal na ang sintomas."},
+  {id:2,name:"Sambong",sci:"Blumea balsamifera",local:["Ngai Camphor","Blumea"],cat:"Kidney & Urinary",color:1,
+   desc:"Halamang mabango ang amoy na may malalapad na dahon, karaniwang tumutubo sa mga damuhan at gilid ng daan. Isa sa mga pangunahing DOH herbal medicine.",
+   parts:"Dahon.",
+   uses:["Diuretic — nakakatulong pababain ang bato sa kidney","Panggamot sa edema (pamamaga)","Nagpapalakas ng ihi"],
+   benefits:["Antioxidant properties","Nakakatulong sa detoxification"],
+   prep:"Pakuluan ang mga sariwang dahon sa tubig ng 15 minuto. Inumin bilang tsaa 2-3 beses sa isang araw.",
+   caution:"Uminom ng maraming tubig kasabay nito. Hindi inirerekomenda para sa taong may matinding sakit sa bato nang walang pahintulot ng doktor."},
+  {id:3,name:"Ampalaya",sci:"Momordica charantia",local:["Bitter Gourd","Bitter Melon"],cat:"Diabetes & Metabolic",color:2,
+   desc:"Gulay na may mapait na lasa at gulugod-gulugod na balat, malawakang itinatanim sa buong Pilipinas at ginagamit sa pagkain at gamot.",
+   parts:"Dahon at bunga.",
+   uses:["Tumutulong sa pagbaba ng blood sugar level","Panggamot sa banayad na diabetes type 2"],
+   benefits:["Mayaman sa vitamin C at antioxidants","Nakakatulong sa metabolismo ng asukal"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 15 minuto, inumin 1/3 tasa 2 beses sa isang araw.",
+   caution:"Hindi dapat gamitin ng buntis. Kumunsulta sa doktor kung umiinom ng gamot sa diabetes upang maiwasan ang labis na pagbaba ng asukal."},
+  {id:4,name:"Bayabas",sci:"Psidium guajava",local:["Guava"],cat:"Skin & Wound",color:3,
+   desc:"Punongkahoy na prutas na karaniwan sa mga bakuran, kilala rin sa antiseptikong katangian ng mga dahon nito.",
+   parts:"Dahon.",
+   uses:["Panlinis at pang-disimpekta ng sugat","Pampuntas sa pananakit ng ngipin","Panggamot sa pagtatae"],
+   benefits:["Antibacterial at antiseptic","Nagpapabilis ng paggaling ng sugat"],
+   prep:"Pakuluan ang mga dahon at gamitin bilang panghugas ng sugat, o gargle para sa lalamunan/ngipin.",
+   caution:"Para sa panlabas na gamit lamang kung nauukol sa sugat. Itigil kung magka-irritasyon ang balat."},
+  {id:5,name:"Akapulko",sci:"Senna alata",local:["Ringworm Bush","Bayabas-bayabasan"],cat:"Skin & Wound",color:4,
+   desc:"Palumpong na may mahahabang dahon, kilala bilang epektibong panggamot sa mga fungal na impeksyon sa balat.",
+   parts:"Dahon.",
+   uses:["Panggamot sa buni (ringworm)","Panggamot sa alipunga at iba pang fungal skin infection"],
+   benefits:["Antifungal at antibacterial"],
+   prep:"Dikdikin ang sariwang dahon at ipahid nang tuwiran sa apektadong bahagi ng balat 2 beses sa isang araw.",
+   caution:"Panlabas na gamit lamang. Huwag ilapat sa bukas na sugat o malapit sa mata."},
+  {id:6,name:"Bawang",sci:"Allium sativum",local:["Garlic"],cat:"General Wellness",color:5,
+   desc:"Sikat na sangkap sa pagluluto na may malakas na amoy, matagal nang ginagamit sa tradisyunal na medisina.",
+   parts:"Bombang ugat (bulb).",
+   uses:["Nakakatulong pababain ang cholesterol","Nakakatulong sa hypertension","Panlaban sa impeksyon"],
+   benefits:["Cardiovascular support","Antimicrobial properties"],
+   prep:"Kainin nang hilaw (1-2 piraso) o isama sa pagluluto araw-araw.",
+   caution:"Maaaring magdulot ng heartburn kung sobra ang inuubos. Iwasan bago ang operasyon dahil sa epekto nito sa pagdurugo."},
+  {id:7,name:"Niyog-niyogan",sci:"Quisqualis indica",local:["Chinese Honeysuckle","Rangoon Creeper"],cat:"Antiparasitic",color:0,
+   desc:"Baging na may mababangong bulaklak na nagpapalit ng kulay mula puti hanggang pula, karaniwan sa mga bakuran bilang halamang paakyat.",
+   parts:"Buto (binhi).",
+   uses:["Pantanggal ng bulate (deworming), lalo na para sa mga bata"],
+   benefits:["Traditional antihelminthic (anti-parasitic)"],
+   prep:"Kainin ang 5-7 pirasong hinog na buto pagkatapos kumain ng hapunan. Huwag lalampas sa inirerekomendang dami.",
+   caution:"Maaaring magdulot ng hiccups kung sobra ang na-ubos. Sundin ang tamang dosage ayon sa edad; kumonsulta sa doktor para sa mga bata."},
+  {id:8,name:"Tsaang Gubat",sci:"Ehretia microphylla",local:["Wild Tea"],cat:"Digestive",color:1,
+   desc:"Palumpong na may maliliit na dahon na tradisyunal na ginagawang tsaa, isa sa 10 DOH herbal medicine.",
+   parts:"Dahon.",
+   uses:["Panggamot sa sakit ng tiyan","Panlaban sa pagtatae","Pantulong sa panunaw"],
+   benefits:["Astringent properties","Nakakatulong sa digestive health"],
+   prep:"Painitin/pakuluan ang mga dahon at inumin bilang tsaa pagkatapos kumain.",
+   caution:"Katamtamang inumin lamang; sobrang paggamit ay maaaring magdulot ng pagkalibang."},
+  {id:9,name:"Ulasimang Bato",sci:"Peperomia pellucida",local:["Pansit-pansitan"],cat:"Skin & Wound",color:2,
+   desc:"Maliit, malutong na halaman na madalas tumutubo sa maulan at maligamgam na lugar, kilala rin bilang gulay.",
+   parts:"Buong halaman.",
+   uses:["Nakakatulong pababain ang uric acid","Panggamot sa arthritis at gout"],
+   benefits:["Anti-inflammatory","Analgesic (pampawala ng sakit)"],
+   prep:"Pakuluan ang buong halaman sa tubig ng 15 minuto, inumin 3 beses sa isang araw, o kainin bilang salad.",
+   caution:"Kumonsulta sa doktor kung may kasabay na gamot sa gout o arthritis."},
+  {id:10,name:"Yerba Buena",sci:"Clinopodium douglasii",local:["Peppermint","Mint"],cat:"Pain Relief",color:3,
+   desc:"Mabangong halamang gamot na may lasang mint, karaniwang itinatanim sa paso o bakuran.",
+   parts:"Dahon.",
+   uses:["Pampawala ng sakit ng ulo","Panggamot sa body pain at sakit ng katawan","Nakakatulong sa pananakit ng tiyan"],
+   benefits:["Analgesic at anti-inflammatory","Cooling/soothing effect"],
+   prep:"Dikdikin ang sariwang dahon at ipahid sa noo, o pakuluan bilang tsaa.",
+   caution:"Panlabas na paggamit ay dapat iwasan sa mata. Katamtamang inumin lamang."},
+  {id:11,name:"Malunggay",sci:"Moringa oleifera",local:["Moringa","Horseradish Tree"],cat:"General Wellness",color:4,
+   desc:"Punongkahoy na kilala bilang \"miracle tree\" dahil sa taas ng sustansya ng mga dahon nito, karaniwang ginagawang ulam.",
+   parts:"Dahon.",
+   uses:["Nagpapalakas ng gatas ng nagpapasusong ina","Panlaban sa anemia","Karagdagang bitamina at mineral"],
+   benefits:["Mayaman sa iron, calcium, at vitamin A","Antioxidant-rich"],
+   prep:"Isama sa sabaw o ulam, o pakuluan ang dahon bilang tsaa.",
+   caution:"Ligtas na pagkain, ngunit iwasan ang labis na pag-inom ng ugat/lugaw nito dahil sa posibleng epekto sa buntis."},
+  {id:12,name:"Luya",sci:"Zingiber officinale",local:["Ginger"],cat:"Digestive",color:5,
+   desc:"Ugat na may matinding lasa at amoy, sikat na sangkap sa pagluluto at tradisyunal na gamot.",
+   parts:"Ugat (rhizome).",
+   uses:["Panggamot sa sipon at ubo","Pampawala ng pagduduwal (nausea)","Nakakatulong sa panunaw"],
+   benefits:["Anti-inflammatory","Nagpapainit ng katawan"],
+   prep:"Pakuluan ang hiniwang luya sa tubig ng 10 minuto, idagdag ang pulot-pukyutan kung nais, inumin habang mainit.",
+   caution:"Katamtamang inumin lamang kung may gallstones o umiinom ng blood thinner."},
+  {id:13,name:"Banaba",sci:"Lagerstroemia speciosa",local:["Queen's Crape Myrtle"],cat:"Diabetes & Metabolic",color:0,
+   desc:"Punongkahoy na may kulay-lilang bulaklak, kilala sa antidiabetic na katangian ng mga dahon nito.",
+   parts:"Dahon.",
+   uses:["Tumutulong pababain ang blood sugar level","Nakakatulong sa weight management"],
+   benefits:["Corosolic acid content — nakakatulong sa metabolismo ng glucose"],
+   prep:"Pakuluan ang tuyong dahon sa tubig ng 15 minuto, inumin bilang tsaa.",
+   caution:"Kumunsulta sa doktor kung umiinom ng gamot sa diabetes."},
+  {id:14,name:"Oregano",sci:"Coleus amboinicus",local:["Suganda","Oregano Filipino"],cat:"Respiratory",color:1,
+   desc:"Halamang may makapal at mabangong dahon, iba sa Italian oregano ngunit ganoon din ang tawag dito sa Pilipinas.",
+   parts:"Dahon.",
+   uses:["Panggamot sa ubo at hika","Nakakatulong sa paglabas ng plema"],
+   benefits:["Antibacterial","Nakakatulong sa respiratory health"],
+   prep:"Pakuluan ang mga dahon bilang tsaa, o dikdikin at haluan ng tubig-mainit para sa steam inhalation.",
+   caution:"Katamtamang paggamit lamang para sa mga bata."},
+  {id:15,name:"Sabila",sci:"Aloe vera",local:["Aloe Vera"],cat:"Skin & Wound",color:2,
+   desc:"Halamang matabang dahon na may malinaw na gel sa loob, malawakang ginagamit sa skincare at pangunang lunas.",
+   parts:"Gel mula sa dahon.",
+   uses:["Panggamot sa paso (burns) at hiwa","Pampalambot at pampagaling ng balat","Panlaban sa hair fall"],
+   benefits:["Nagpapalamig at nagpapagaling ng balat","Moisturizing properties"],
+   prep:"Kunin ang gel mula sa hiniwang dahon, ipahid nang tuwiran sa apektadong balat.",
+   caution:"Subukan muna sa maliit na bahagi ng balat para sa allergic reaction bago gamitin nang malawakan."},
+  {id:16,name:"Mayana",sci:"Coleus scutellarioides",local:["Painted Nettle"],cat:"Pain Relief",color:3,
+   desc:"Ornamental na halaman na may makulay na dahon, ginagamit din bilang halamang gamot.",
+   parts:"Dahon.",
+   uses:["Panggamot sa ubo","Pampawala ng sakit ng ulo","Panlunas sa maliliit na sugat"],
+   benefits:["Anti-inflammatory properties"],
+   prep:"Dikdikin ang sariwang dahon at ipahid sa apektadong bahagi, o pakuluan bilang tsaa.",
+   caution:"Para sa panlabas na gamit, iwasan ang mata. Katamtamang inumin lamang."},
+  {id:17,name:"Damong Maria",sci:"Artemisia vulgaris",local:["Mugwort"],cat:"Digestive",color:4,
+   desc:"Mabangong halaman na tradisyunal na ginagamit para sa kalusugan ng kababaihan.",
+   parts:"Dahon.",
+   uses:["Pampawala ng sakit ng tiyan tuwing regla","Panggamot sa menstrual cramps"],
+   benefits:["Antispasmodic properties"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 15 minuto, inumin bilang tsaa kung sumasakit ang tiyan.",
+   caution:"Iwasan ng buntis na kababaihan dahil sa potensyal na epekto sa matris."},
+  {id:18,name:"Makabuhay",sci:"Tinospora rumphii",local:["Heartleaf Moonseed"],cat:"General Wellness",color:5,
+   desc:"Baging na may mapait na katas, matagal nang ginagamit sa tradisyunal na medisina bilang \"panglaban sa lason\".",
+   parts:"Baging (stem).",
+   uses:["Panlaban sa lagnat","Panggamot sa arthritis","Detoxification"],
+   benefits:["Immune-boosting properties","Anti-inflammatory"],
+   prep:"Pakuluan ang hiniwang baging sa tubig ng 15 minuto, inumin nang katamtaman.",
+   caution:"Mapait ang lasa; huwag lalampas sa inirekomendang dami dahil sa posibleng toxicity kung sobra."},
+  {id:19,name:"Pandan",sci:"Pandanus amaryllifolius",local:["Pandan Leaf","Screwpine"],cat:"General Wellness",color:0,
+   desc:"Mabangong dahon na malawakang ginagamit sa pagluluto, may kalmadong epekto rin sa katawan.",
+   parts:"Dahon.",
+   uses:["Nakakatulong sa hypertension","Pampakalma sa katawan","Panlasa sa pagkain"],
+   benefits:["Aromatic at calming properties"],
+   prep:"Pakuluan ang mga dahon sa tubig at inumin bilang tsaa, o isama sa pagluluto.",
+   caution:"Ligtas gamitin, walang kilalang seryosong epekto sa katamtamang dami."},
+  {id:20,name:"Gumamela",sci:"Hibiscus rosa-sinensis",local:["Hibiscus","China Rose"],cat:"Respiratory",color:1,
+   desc:"Bulaklak na karaniwan sa mga bakuran, ginagamit din sa tradisyunal na gamot bukod sa palamuti.",
+   parts:"Bulaklak at dahon.",
+   uses:["Panggamot sa ubo at lagnat","Nakakatulong sa paglago ng buhok"],
+   benefits:["May antioxidant properties","Anti-inflammatory"],
+   prep:"Pakuluan ang bulaklak/dahon bilang tsaa, o gawing hair rinse ang decoction.",
+   caution:"Katamtamang paggamit lamang; maaaring makaapekto sa fertility kung sobra-sobra ang paggamit."},
+  {id:21,name:"Papaya",sci:"Carica papaya",local:["Papaya Leaves"],cat:"Digestive",color:2,
+   desc:"Punongkahoy na prutas na ang mga dahon ay tradisyunal na ginagamit para sa dengue at panunaw.",
+   parts:"Dahon.",
+   uses:["Tumutulong itaas ang platelet count sa dengue","Pantulong sa panunaw"],
+   benefits:["Mayaman sa enzymes tulad ng papain"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 20 minuto, inumin nang katamtaman sa gabay ng doktor.",
+   caution:"HINDI kapalit ng gamot na medikal; laging kumonsulta sa doktor kapag may dengue."},
+  {id:22,name:"Guyabano",sci:"Annona muricata",local:["Soursop","Graviola"],cat:"General Wellness",color:3,
+   desc:"Punongkahoy na prutas na may matinik na balat, ang mga dahon nito ay tradisyunal na iniinom bilang tsaa.",
+   parts:"Dahon.",
+   uses:["Nakakatulong sa pagtulog","Panlaban sa pamamaga (inflammation)"],
+   benefits:["Calming properties","Antioxidant-rich"],
+   prep:"Pakuluan ang mga tuyong dahon sa tubig ng 15 minuto, inumin bago matulog.",
+   caution:"Iwasan ang labis na paggamit; kumonsulta sa doktor kung may kasalukuyang gamot."},
+  {id:23,name:"Avocado",sci:"Persea americana",local:["Abukado — Dahon ng Avocado"],cat:"Kidney & Urinary",color:4,
+   desc:"Punongkahoy na prutas, ang mga dahon nito ay ginagamit sa tradisyunal na gamot para sa bato at presyon ng dugo.",
+   parts:"Dahon.",
+   uses:["Nakakatulong sa hypertension","Panlaban sa kidney stones"],
+   benefits:["Diuretic properties"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 15 minuto, inumin bilang tsaa.",
+   caution:"Kumonsulta sa doktor kung may kasalukuyang gamot sa presyon ng dugo."},
+  {id:24,name:"Kalamansi",sci:"Citrofortunella microcarpa",local:["Calamondin","Philippine Lime"],cat:"Respiratory",color:5,
+   desc:"Maliit na prutas na sitrus, malawakang ginagamit sa pagluluto at tradisyunal na panggamot sa ubo.",
+   parts:"Bunga (juice).",
+   uses:["Panggamot sa ubo at sipon","Mapagkukunan ng vitamin C","Panlinis ng lalamunan"],
+   benefits:["Immune-boosting","Antioxidant-rich"],
+   prep:"Piga-piga ang katas, haluan ng mainit na tubig at pulot-pukyutan, inumin.",
+   caution:"Iwasan sa taong may sensitibong sikmura sa acidic na inumin."},
+  {id:25,name:"Ikmo",sci:"Piper betle",local:["Betel Leaf","Ikmo/Buyo"],cat:"Skin & Wound",color:0,
+   desc:"Baging na may puso-hugis na dahon, tradisyunal na ginagamit sa oral hygiene at bilang antiseptiko.",
+   parts:"Dahon.",
+   uses:["Panlinis ng bibig at lalamunan","Panlunas sa sugat at pamamaga"],
+   benefits:["Antiseptic at antibacterial properties"],
+   prep:"Ngunguyain ang dahon o gawing gargle ang decoction nito.",
+   caution:"Panandaliang paggamit lamang; iwasan ang labis na pagngunguya."},
+  {id:26,name:"Kamias",sci:"Averrhoa bilimbi",local:["Bilimbi","Kalamias"],cat:"General Wellness",color:1,
+   desc:"Punongkahoy na may maasim na bunga, karaniwang tumutubo sa bakuran, ginagamit sa pagluluto at gamot.",
+   parts:"Bunga at dahon.",
+   uses:["Nakakatulong sa hypertension","Panggamot sa ubo at pamamaga ng lalamunan"],
+   benefits:["Mayaman sa vitamin C","Antioxidant properties"],
+   prep:"Pakuluan ang mga dahon o piga ang katas ng bunga, inumin nang katamtaman.",
+   caution:"Iwasan ang labis na pag-inom dahil sa taas ng oxalic acid — maaaring makaapekto sa bato kung sobra."},
+  {id:27,name:"Balanoy",sci:"Ocimum basilicum",local:["Sweet Basil","Basil"],cat:"Digestive",color:2,
+   desc:"Mabangong halamang gulay na may lasang katulad ng anise, karaniwang itinatanim sa hardin o paso.",
+   parts:"Dahon.",
+   uses:["Panggamot sa ubo","Pampawala ng sakit ng tiyan","Pantulong sa panunaw"],
+   benefits:["Antibacterial properties","Nakakatulong sa digestion"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 10 minuto, inumin bilang tsaa.",
+   caution:"Katamtamang paggamit lamang para sa mga buntis."},
+  {id:28,name:"Kataka-taka",sci:"Kalanchoe pinnata",local:["Life Plant","Miracle Leaf"],cat:"Skin & Wound",color:3,
+   desc:"Matabang halaman na kilala sa kakayahang tumubo ang bagong halaman mula sa gilid ng dahon nito, kaya ang pangalan.",
+   parts:"Dahon.",
+   uses:["Panggamot sa sugat at paso","Nakakatulong sa pamamaga"],
+   benefits:["Wound-healing at anti-inflammatory properties"],
+   prep:"Dikdikin ang sariwang dahon at ipahid nang tuwiran sa apektadong balat.",
+   caution:"Panlabas na gamit lamang. Subukan muna sa maliit na bahagi ng balat."},
+  {id:29,name:"Kamote Tops",sci:"Ipomoea batatas",local:["Sweet Potato Leaves","Talbos ng Kamote"],cat:"Diabetes & Metabolic",color:4,
+   desc:"Ang mga dahon ng kamote, karaniwang niluluto bilang gulay, mayaman din sa sustansya at ginagamit sa tradisyunal na gamot.",
+   parts:"Dahon.",
+   uses:["Nakakatulong pababain ang blood sugar","Nagpapalakas ng gatas ng nagpapasusong ina"],
+   benefits:["Mayaman sa iron at vitamin A","Antioxidant-rich"],
+   prep:"Isama sa sabaw o igisa bilang ulam, o pakuluan bilang tsaa.",
+   caution:"Ligtas na pagkain sa katamtamang dami; walang seryosong epekto."},
+  {id:30,name:"Sibuyas",sci:"Allium cepa",local:["Onion"],cat:"Respiratory",color:5,
+   desc:"Karaniwang sangkap sa pagluluto na may malakas na amoy, ginagamit din sa tradisyunal na panggamot sa ubo.",
+   parts:"Bombang ugat (bulb).",
+   uses:["Panggamot sa ubo at sipon","Nakakatulong pababain ang cholesterol"],
+   benefits:["Antimicrobial properties","May anti-inflammatory effect"],
+   prep:"Kainin nang hilaw o isama sa pagluluto; pwede ring gawing syrup na haluan ng pulot-pukyutan para sa ubo.",
+   caution:"Maaaring magdulot ng heartburn kung sobra ang inuubos."},
+  {id:31,name:"Alagaw",sci:"Premna odorata",local:["Fragrant Premna"],cat:"Respiratory",color:0,
+   desc:"Palumpong na mabangong dahon, tradisyunal na ginagamit para sa lagnat at sakit sa paghinga.",
+   parts:"Dahon.",
+   uses:["Panlaban sa lagnat","Panggamot sa ubo at hika"],
+   benefits:["Anti-inflammatory properties"],
+   prep:"Pakuluan ang mga dahon sa tubig ng 15 minuto, inumin bilang tsaa.",
+   caution:"Katamtamang inumin lamang; kumonsulta sa doktor kung matagal na ang sintomas."},
+  {id:32,name:"Bignay",sci:"Antidesma bunius",local:["Bignay Berry"],cat:"Digestive",color:1,
+   desc:"Punongkahoy na may maliliit at maasim na bunga, karaniwang ginagawang jam o alak, may medisinal na gamit din.",
+   parts:"Bunga at dahon.",
+   uses:["Panggamot sa pagtatae","Antioxidant support"],
+   benefits:["Mayaman sa antioxidants at vitamin C"],
+   prep:"Kainin ang hinog na bunga, o pakuluan ang mga dahon bilang tsaa.",
+   caution:"Iwasan ang hilaw/maasim pa na bunga sa malaking dami — maaaring makasakit ng tiyan."},
+  {id:33,name:"Duhat",sci:"Syzygium cumini",local:["Java Plum","Lomboy"],cat:"Diabetes & Metabolic",color:2,
+   desc:"Punongkahoy na may maiitim na maliliit na bunga, kilala sa tradisyunal na paggamit para sa diabetes.",
+   parts:"Bunga at buto.",
+   uses:["Tumutulong pababain ang blood sugar level"],
+   benefits:["Mayaman sa antioxidants"],
+   prep:"Kainin ang hinog na bunga, o gawing pulbos ang tuyong buto at ihalo sa tubig.",
+   caution:"Kumonsulta sa doktor kung umiinom ng gamot sa diabetes."},
+  {id:34,name:"Wansoy",sci:"Coriandrum sativum",local:["Coriander","Cilantro","Kulantro"],cat:"Digestive",color:3,
+   desc:"Mabangong dahong ginagamit bilang panimpla sa pagkain, may tradisyunal na gamit din sa panunaw.",
+   parts:"Dahon at buto.",
+   uses:["Pantulong sa panunaw","Pampawala ng sakit ng tiyan"],
+   benefits:["Antioxidant properties","Nakakatulong sa digestive health"],
+   prep:"Isama sa pagluluto, o pakuluan ang mga buto/dahon bilang tsaa.",
+   caution:"Ligtas na paggamit sa karaniwang dami sa pagkain."},
+  {id:35,name:"Sampalok",sci:"Tamarindus indica",local:["Tamarind"],cat:"Digestive",color:4,
+   desc:"Punongkahoy na maasim ang bunga, karaniwang sangkap sa sinigang, may tradisyunal na gamit din sa panggamot.",
+   parts:"Bunga at dahon.",
+   uses:["Panlaban sa lagnat","Pampadulas ng dumi (laxative)","Panlunas sa sakit ng lalamunan"],
+   benefits:["Mayaman sa vitamin C","May antioxidant properties"],
+   prep:"Kainin ang hinog na bunga, o pakuluan ang mga dahon bilang tsaa/gargle.",
+   caution:"Iwasan ang labis na pag-inom para sa taong may ulcer o sensitibong sikmura."},
+  {id:36,name:"Saluyot",sci:"Corchorus olitorius",local:["Jute Mallow"],cat:"Digestive",color:5,
+   desc:"Malutong na gulay na madalas isinasama sa sinigang o inilulusaw, mayaman sa sustansya.",
+   parts:"Dahon.",
+   uses:["Pampadulas ng dumi (laxative)","Sustansyang panlaban sa anemia"],
+   benefits:["Mayaman sa iron, calcium, at vitamin C"],
+   prep:"Isama sa sabaw o igisa bilang ulam.",
+   caution:"Ligtas na pagkain, walang kilalang seryosong epekto."},
+  {id:37,name:"Alugbati",sci:"Basella alba",local:["Malabar Spinach"],cat:"Digestive",color:0,
+   desc:"Malagong baging na gulay na may malapot na katas kapag niluto, karaniwang isinasama sa sinigang.",
+   parts:"Dahon.",
+   uses:["Pampadulas ng dumi (laxative)","Panlaban sa pamamaga"],
+   benefits:["Mayaman sa iron at vitamin A"],
+   prep:"Isama sa sabaw o igisa bilang ulam.",
+   caution:"Ligtas na pagkain sa karaniwang dami."},
+  {id:38,name:"Kamantigi",sci:"Impatiens balsamina",local:["Garden Balsam"],cat:"Skin & Wound",color:1,
+   desc:"Ornamental na halaman na may makukulay na bulaklak, tradisyunal na ginagamit para sa balat at kuko.",
+   parts:"Dahon at bulaklak.",
+   uses:["Panggamot sa sugat at pamamaga","Pantulong sa paglakas ng kuko"],
+   benefits:["Anti-inflammatory properties"],
+   prep:"Dikdikin ang sariwang dahon o bulaklak at ipahid sa apektadong bahagi.",
+   caution:"Panlabas na gamit lamang; iwasan ang mata."},
+  {id:39,name:"Rosal",sci:"Gardenia jasminoides",local:["Cape Jasmine"],cat:"Pain Relief",color:2,
+   desc:"Mabangong bulaklak na puti, karaniwang itinatanim bilang palamuti, may tradisyunal na gamit din sa panggamot.",
+   parts:"Bulaklak at dahon.",
+   uses:["Panlaban sa lagnat","Pampawala ng sakit ng ulo"],
+   benefits:["Calming at anti-inflammatory properties"],
+   prep:"Pakuluan ang mga bulaklak/dahon sa tubig, inumin bilang tsaa.",
+   caution:"Katamtamang paggamit lamang; hindi inirerekomenda sa buntis nang walang pahintulot ng doktor."}
+];
+
+/* Mutable, live copy of the plant database — starts from the built-in defaults
+   and gets replaced with data from Firestore (cloud database) once connected,
+   so the app instantly shows content while the cloud sync happens in the background. */
+let PLANTS = DEFAULT_PLANTS.map(p=>({...p}));
+
+/* ================= FIRESTORE (cloud database) CONNECTION =================
+   1. Create a free project at https://console.firebase.google.com
+   2. Add a Web App inside it, copy the config object it gives you
+   3. Paste it below, replacing the placeholder values
+   4. Open the app > About tab > "I-upload ang Plant Data sa Firestore" (one time)
+   Until you do this, the app runs fully offline using DEFAULT_PLANTS above —
+   nothing breaks if Firebase isn't configured yet. */
+const firebaseConfig = {
+  apiKey: "AIzaSyAFxISfopvxm3709yn4a2kXbc0okZ-Fdrw",
+  authDomain: "herbal-plant-is.firebaseapp.com",
+  projectId: "herbal-plant-is",
+  storageBucket: "herbal-plant-is.firebasestorage.app",
+  messagingSenderId: "1083655012350",
+  appId: "1:1083655012350:web:0ca61db794ee3c7eb5caaf"
+};
+let firestoreDB = null;
+let firestoreConnected = false;
+const PLANTS_COLLECTION = "plants";
+const EMBEDDINGS_COLLECTION = "embeddings";
+
+function isFirebaseConfigured(){
+  return firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+}
+
+function initFirebase(){
+  if(!isFirebaseConfigured()){ setDBStatus('not-configured'); return; }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    firestoreDB = firebase.firestore();
+    firestoreConnected = true;
+    setDBStatus('connecting');
+    loadPlantsFromFirestore();
+    loadEmbeddingsFromFirestore();
+  }catch(e){
+    console.warn('Firebase init failed:', e);
+    setDBStatus('error');
+  }
+}
+
+/* Push one training sample to Firestore so every device scanning the app
+   (not just the one it was trained on) can use it for AI matching. */
+async function syncEmbeddingToFirestore(plantId, vector, thumb){
+  if(!firestoreConnected) return;
+  try{
+    await firestoreDB.collection(EMBEDDINGS_COLLECTION).add({
+      plantId: Number(plantId),
+      vector,
+      thumb,
+      createdAt: Date.now()
+    });
+  }catch(e){
+    console.warn('Could not sync training sample to Firestore (kept locally):', e);
+  }
+}
+
+/* Pull every training sample anyone has added (from Firestore) and merge it
+   into the in-memory trainingData used for AI matching — this is what makes
+   scanning work correctly on a phone even if training only happened on a laptop. */
+async function loadEmbeddingsFromFirestore(){
+  try{
+    const snap = await firestoreDB.collection(EMBEDDINGS_COLLECTION).get();
+    if(snap.empty) return;
+    snap.forEach(doc=>{
+      const d = doc.data();
+      if(!d || !d.plantId || !d.vector) return;
+      if(!trainingData[d.plantId]) trainingData[d.plantId] = [];
+      trainingData[d.plantId].push({vector: d.vector, thumb: d.thumb, cloud:true, docId: doc.id});
+    });
+    renderTrainList();
+    renderHome();
+    filterLibrary();
+  }catch(e){
+    console.warn('Could not load cloud training samples, using local only:', e);
+  }
+}
+
+async function loadPlantsFromFirestore(){
+  try{
+    const snap = await firestoreDB.collection(PLANTS_COLLECTION).get();
+    if(snap.empty){
+      setDBStatus('empty');
+      return;
+    }
+    const cloudPlants = [];
+    snap.forEach(doc=> cloudPlants.push(doc.data()));
+    cloudPlants.sort((a,b)=> a.id - b.id);
+    PLANTS = cloudPlants;
+    setDBStatus('connected');
+    // re-render any screens that depend on PLANTS, now with live cloud data
+    renderHome();
+    renderLibraryChips();
+    filterLibrary();
+    renderTrainChips();
+    renderTrainList();
+  }catch(e){
+    console.warn('Firestore read failed, staying on local data:', e);
+    setDBStatus('error');
+  }
+}
+
+async function seedFirestore(){
+  if(!firestoreConnected){
+    alert('Hindi pa naka-configure ang Firebase. Sundin muna ang mga hakbang sa README (paste firebaseConfig sa index.html).');
+    return;
+  }
+  if(!confirm('Ia-upload ang 25 halamang gamot papunta sa Firestore. Isang beses lang ito dapat gawin. Magpatuloy?')) return;
+  try{
+    const batch = firestoreDB.batch();
+    DEFAULT_PLANTS.forEach(p=>{
+      const ref = firestoreDB.collection(PLANTS_COLLECTION).doc(String(p.id));
+      batch.set(ref, p);
+    });
+    await batch.commit();
+    alert('Tagumpay! Na-upload na ang plant data sa Firestore. Ire-refresh na ang datos.');
+    loadPlantsFromFirestore();
+  }catch(e){
+    console.error(e);
+    alert('May error sa pag-upload: ' + e.message);
+  }
+}
+
+function setDBStatus(state){
+  const el = document.getElementById('db-status-badge');
+  if(!el) return;
+  const labels = {
+    'not-configured': ['○', 'Local Data (Firestore not configured)', 'db-offline'],
+    'connecting': ['◐', 'Connecting to Firestore...', 'db-connecting'],
+    'connected': ['●', 'Connected to Firestore (cloud)', 'db-online'],
+    'empty': ['○', 'Firestore connected, but empty — click Upload below', 'db-offline'],
+    'error': ['○', 'Firestore connection failed — using local data', 'db-offline'],
+  };
+  const [dot, text, cls] = labels[state] || labels['not-configured'];
+  el.className = 'db-status-badge ' + cls;
+  el.innerHTML = `<span class="dbdot"></span>${text}`;
+}
+
+const CATEGORIES = ["All","Respiratory","Digestive","Skin & Wound","Diabetes & Metabolic","Kidney & Urinary","Antiparasitic","Pain Relief","General Wellness"];
+
+const LEAF_PALETTES = [
+  ["#3F6B4C","#274A34"],["#5C7A3F","#3A5228"],["#7A8C3C","#586A22"],
+  ["#4B7A63","#2E5645"],["#6B8E4E","#4A6835"],["#3D6E5A","#254B3D"]
+];
+
+function leafSVG(colorIdx, size){
+  const p = LEAF_PALETTES[colorIdx % LEAF_PALETTES.length];
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <path d="M50 6C22 22 12 58 32 92C64 76 90 44 50 6Z" fill="${p[0]}"/>
+    <path d="M50 14C48 40 48 70 50 88" stroke="${p[1]}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M50 30c8 4 14 10 16 16M50 46c8 4 15 11 17 18M50 62c6 3 11 9 13 14" stroke="${p[1]}" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.7"/>
+  </svg>`;
+}
+
+/* Prefer a real photo the user captured/uploaded in "Train AI" for this plant
+   (stored locally in IndexedDB) over the generic leaf illustration — this keeps
+   the app free of any scraped/third-party images while still showing an actual
+   photo once the user has trained that plant at least once. */
+function plantVisualHTML(p, size){
+  const samples = trainingData[p.id];
+  if(samples && samples.length>0){
+    return `<img src="${samples[0].thumb}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:50%;display:block;">`;
+  }
+  return leafSVG(p.color, size);
+}
+
+/* ================= STATE ================= */
+let currentDetailFrom = 'library';
+let stream = null;
+let capturedDataUrl = null;
+let lastMatchedPlant = null;
+let recognition = null;
+let listening = false;
+
+/* ================= AI MODEL (TensorFlow.js MobileNet) ================= */
+let mobilenetModel = null;
+let aiReady = false;
+let aiLoadFailed = false;
+let trainingData = {};      // { plantId: [ {vector:[...], thumb:"data:..."} , ... ] }
+let trainActiveCat = 'All';
+let trainTargetPlantId = null;
+
+/* ---- Bundled sample photos (thesis dataset), used to auto-train the AI on first ----
+   run so the scanner works out-of-the-box instead of staying in Demo Mode. Paths are
+   relative to index.html (see /training-samples/<plantId>-<slug>/1.jpg ... 5.jpg). */
+const BUNDLED_SAMPLES = {
+  1: ["training-samples/1-lagundi/1.jpg","training-samples/1-lagundi/2.jpg","training-samples/1-lagundi/3.jpg","training-samples/1-lagundi/4.jpg","training-samples/1-lagundi/5.jpg"],
+  2: ["training-samples/2-sambong/1.jpg","training-samples/2-sambong/2.jpg","training-samples/2-sambong/3.jpg","training-samples/2-sambong/4.jpg","training-samples/2-sambong/5.jpg"],
+  3: ["training-samples/3-ampalaya/1.jpg","training-samples/3-ampalaya/2.jpg","training-samples/3-ampalaya/3.jpg","training-samples/3-ampalaya/4.jpg","training-samples/3-ampalaya/5.jpg"],
+  4: ["training-samples/4-bayabas/1.jpg","training-samples/4-bayabas/2.jpg","training-samples/4-bayabas/3.jpg","training-samples/4-bayabas/4.jpg","training-samples/4-bayabas/5.jpg"],
+  5: ["training-samples/5-akapulko/1.jpg","training-samples/5-akapulko/2.jpg","training-samples/5-akapulko/3.jpg","training-samples/5-akapulko/4.jpg","training-samples/5-akapulko/5.jpg"],
+  6: ["training-samples/6-bawang/1.jpg","training-samples/6-bawang/2.jpg","training-samples/6-bawang/3.jpg","training-samples/6-bawang/4.jpg","training-samples/6-bawang/5.jpg"],
+  7: ["training-samples/7-niyog-niyogan/1.jpg","training-samples/7-niyog-niyogan/2.jpg","training-samples/7-niyog-niyogan/3.jpg","training-samples/7-niyog-niyogan/4.jpg","training-samples/7-niyog-niyogan/5.jpg"],
+  8: ["training-samples/8-tsaang-gubat/1.jpg","training-samples/8-tsaang-gubat/2.jpg","training-samples/8-tsaang-gubat/3.jpg","training-samples/8-tsaang-gubat/4.jpg","training-samples/8-tsaang-gubat/5.jpg"],
+  9: ["training-samples/9-ulasimang-bato/1.jpg","training-samples/9-ulasimang-bato/2.jpg","training-samples/9-ulasimang-bato/3.jpg","training-samples/9-ulasimang-bato/4.jpg","training-samples/9-ulasimang-bato/5.jpg"],
+  10: ["training-samples/10-yerba-buena/1.jpg","training-samples/10-yerba-buena/2.jpg","training-samples/10-yerba-buena/3.jpg","training-samples/10-yerba-buena/4.jpg","training-samples/10-yerba-buena/5.jpg"],
+  11: ["training-samples/11-malunggay/1.jpg","training-samples/11-malunggay/2.jpg","training-samples/11-malunggay/3.jpg","training-samples/11-malunggay/4.jpg","training-samples/11-malunggay/5.jpg"],
+  12: ["training-samples/12-luya/1.jpg","training-samples/12-luya/2.jpg","training-samples/12-luya/3.jpg","training-samples/12-luya/4.jpg","training-samples/12-luya/5.jpg"],
+  13: ["training-samples/13-banaba/1.jpg","training-samples/13-banaba/2.jpg","training-samples/13-banaba/3.jpg","training-samples/13-banaba/4.jpg","training-samples/13-banaba/5.jpg"],
+  14: ["training-samples/14-oregano/1.jpg","training-samples/14-oregano/2.jpg","training-samples/14-oregano/3.jpg","training-samples/14-oregano/4.jpg","training-samples/14-oregano/5.jpg"],
+  15: ["training-samples/15-sabila/1.jpg","training-samples/15-sabila/2.jpg","training-samples/15-sabila/3.jpg","training-samples/15-sabila/4.jpg","training-samples/15-sabila/5.jpg"],
+  16: ["training-samples/16-mayana/1.jpg","training-samples/16-mayana/2.jpg","training-samples/16-mayana/3.jpg","training-samples/16-mayana/4.jpg","training-samples/16-mayana/5.jpg"],
+  17: ["training-samples/17-damong-maria/1.jpg","training-samples/17-damong-maria/2.jpg","training-samples/17-damong-maria/3.jpg","training-samples/17-damong-maria/4.jpg","training-samples/17-damong-maria/5.jpg"],
+  18: ["training-samples/18-makabuhay/1.jpg","training-samples/18-makabuhay/2.jpg","training-samples/18-makabuhay/3.jpg","training-samples/18-makabuhay/4.jpg","training-samples/18-makabuhay/5.jpg"],
+  19: ["training-samples/19-pandan/1.jpg","training-samples/19-pandan/2.jpg","training-samples/19-pandan/3.jpg","training-samples/19-pandan/4.jpg","training-samples/19-pandan/5.jpg"],
+  20: ["training-samples/20-gumamela/1.jpg","training-samples/20-gumamela/2.jpg","training-samples/20-gumamela/3.jpg","training-samples/20-gumamela/4.jpg","training-samples/20-gumamela/5.jpg"],
+  21: ["training-samples/21-papaya/1.jpg","training-samples/21-papaya/2.jpg","training-samples/21-papaya/3.jpg","training-samples/21-papaya/4.jpg","training-samples/21-papaya/5.jpg"],
+  22: ["training-samples/22-guyabano/1.jpg","training-samples/22-guyabano/2.jpg","training-samples/22-guyabano/3.jpg","training-samples/22-guyabano/4.jpg","training-samples/22-guyabano/5.jpg"],
+  23: ["training-samples/23-avocado/1.jpg","training-samples/23-avocado/2.jpg","training-samples/23-avocado/3.jpg","training-samples/23-avocado/4.jpg","training-samples/23-avocado/5.jpg"],
+  24: ["training-samples/24-kalamansi/1.jpg","training-samples/24-kalamansi/2.jpg","training-samples/24-kalamansi/3.jpg","training-samples/24-kalamansi/4.jpg","training-samples/24-kalamansi/5.jpg"],
+  25: ["training-samples/25-ikmo/1.jpg","training-samples/25-ikmo/2.jpg","training-samples/25-ikmo/3.jpg","training-samples/25-ikmo/4.jpg","training-samples/25-ikmo/5.jpg"],
+  26: ["training-samples/26-kamias/1.jpg","training-samples/26-kamias/2.jpg","training-samples/26-kamias/3.jpg","training-samples/26-kamias/4.jpg","training-samples/26-kamias/5.jpg"],
+  27: ["training-samples/27-balanoy/1.jpg","training-samples/27-balanoy/2.jpg","training-samples/27-balanoy/3.jpg","training-samples/27-balanoy/4.jpg","training-samples/27-balanoy/5.jpg"],
+  28: ["training-samples/28-kataka-taka/1.jpg","training-samples/28-kataka-taka/2.jpg","training-samples/28-kataka-taka/3.jpg","training-samples/28-kataka-taka/4.jpg","training-samples/28-kataka-taka/5.jpg"],
+  29: ["training-samples/29-kamote-tops/1.jpg","training-samples/29-kamote-tops/2.jpg","training-samples/29-kamote-tops/3.jpg","training-samples/29-kamote-tops/4.jpg","training-samples/29-kamote-tops/5.jpg"],
+  30: ["training-samples/30-sibuyas/1.jpg","training-samples/30-sibuyas/2.jpg","training-samples/30-sibuyas/3.jpg","training-samples/30-sibuyas/4.jpg","training-samples/30-sibuyas/5.jpg"],
+  31: ["training-samples/31-alagaw/1.jpg","training-samples/31-alagaw/2.jpg","training-samples/31-alagaw/3.jpg","training-samples/31-alagaw/4.jpg","training-samples/31-alagaw/5.jpg"],
+  32: ["training-samples/32-bignay/1.jpg","training-samples/32-bignay/2.jpg","training-samples/32-bignay/3.jpg","training-samples/32-bignay/4.jpg","training-samples/32-bignay/5.jpg"],
+  33: ["training-samples/33-duhat/1.jpg","training-samples/33-duhat/2.jpg","training-samples/33-duhat/3.jpg","training-samples/33-duhat/4.jpg","training-samples/33-duhat/5.jpg"],
+  34: ["training-samples/34-wansoy/1.jpg","training-samples/34-wansoy/2.jpg","training-samples/34-wansoy/3.jpg","training-samples/34-wansoy/4.jpg","training-samples/34-wansoy/5.jpg"],
+  35: ["training-samples/35-sampalok/1.jpg","training-samples/35-sampalok/2.jpg","training-samples/35-sampalok/3.jpg","training-samples/35-sampalok/4.jpg","training-samples/35-sampalok/5.jpg"],
+  36: ["training-samples/36-saluyot/1.jpg","training-samples/36-saluyot/2.jpg","training-samples/36-saluyot/3.jpg","training-samples/36-saluyot/4.jpg","training-samples/36-saluyot/5.jpg"],
+  37: ["training-samples/37-alugbati/1.jpg","training-samples/37-alugbati/2.jpg","training-samples/37-alugbati/3.jpg","training-samples/37-alugbati/4.jpg","training-samples/37-alugbati/5.jpg"],
+  38: ["training-samples/38-kamantigi/1.jpg","training-samples/38-kamantigi/2.jpg","training-samples/38-kamantigi/3.jpg","training-samples/38-kamantigi/4.jpg","training-samples/38-kamantigi/5.jpg"],
+  39: ["training-samples/39-rosal/1.jpg","training-samples/39-rosal/2.jpg","training-samples/39-rosal/3.jpg","training-samples/39-rosal/4.jpg","training-samples/39-rosal/5.jpg"],
+};
+
+function setAIStatus(state){
+  const badge = document.getElementById('ai-status-badge');
+  const text = document.getElementById('ai-status-text');
+  if(!badge) return;
+  badge.classList.remove('ready','loading');
+  if(state==='ready'){ badge.classList.add('ready'); text.textContent = 'AI Ready'; }
+  else if(state==='error'){ text.textContent = 'AI Unavailable'; }
+  else { badge.classList.add('loading'); text.textContent = 'Loading AI'; }
+}
+
+async function loadAIModel(){
+  try{
+    setAIStatus('loading');
+    mobilenetModel = await mobilenet.load({version:2, alpha:1.0});
+    aiReady = true;
+    setAIStatus('ready');
+  }catch(e){
+    aiLoadFailed = true;
+    setAIStatus('error');
+    console.warn('MobileNet failed to load (likely offline):', e);
+  }
+}
+
+function computeEmbeddingFromElement(el){
+  if(!mobilenetModel) return null;
+  return tf.tidy(()=>{
+    const t = mobilenetModel.infer(el, true);
+    return Array.from(t.dataSync());
+  });
+}
+function cosineSimilarity(a,b){
+  let dot=0, na=0, nb=0;
+  for(let i=0;i<a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+  return dot / (Math.sqrt(na)*Math.sqrt(nb) + 1e-8);
+}
+
+/* ---- IndexedDB storage for training samples (persists on this device/browser) ---- */
+const DB_NAME = 'herbal-ai-db';
+const STORE_NAME = 'embeddings';
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE_NAME)){
+        const store = db.createObjectStore(STORE_NAME, {keyPath:'id', autoIncrement:true});
+        store.createIndex('plantId','plantId',{unique:false});
+      }
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function dbAddEmbedding(plantId, vector, thumb){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    tx.objectStore(STORE_NAME).add({plantId, vector, thumb});
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function dbGetAll(){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readonly');
+    const req = tx.objectStore(STORE_NAME).getAll();
+    req.onsuccess = ()=>resolve(req.result || []);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function dbClearAll(){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function loadTrainingDataFromDB(){
+  try{
+    const rows = await dbGetAll();
+    // Merge into trainingData instead of resetting it — loadEmbeddingsFromFirestore()
+    // runs concurrently and may finish first, so wiping trainingData here would
+    // discard cloud-synced samples for plants trained on other devices/deployments.
+    rows.forEach(r=>{
+      if(!trainingData[r.plantId]) trainingData[r.plantId] = [];
+      trainingData[r.plantId].push({vector:r.vector, thumb:r.thumb});
+    });
+  }catch(e){ console.warn('IndexedDB unavailable:', e); }
+  renderTrainList();
+  renderHome();
+  renderLibraryChips();
+  filterLibrary();
+}
+
+/* ---- Auto-train from bundled sample photos (BUNDLED_SAMPLES) ----
+   Runs automatically once, after the AI model + any existing IndexedDB/Firestore
+   training data have loaded. For every plant that still has ZERO samples, it feeds
+   the bundled photos through the same MobileNet embedding pipeline used by manual
+   "Train AI" uploads, and stores the results in IndexedDB (and syncs to Firestore
+   if connected) — so the scanner shows real "AI Match" results out-of-the-box
+   instead of "Demo Mode". Plants that already have at least 1 sample (manually
+   trained, or auto-trained on a previous run) are skipped, so this never duplicates
+   or overwrites real training data. */
+let autoTrainRunning = false;
+let autoTrainDoneOnce = false;
+
+function loadImageFromURL(url){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = ()=>reject(new Error('Failed to load '+url));
+    img.src = url;
+  });
+}
+
+function setAutoTrainBanner(visible, text){
+  const el = document.getElementById('auto-train-banner');
+  if(!el) return;
+  el.style.display = visible ? 'flex' : 'none';
+  if(text) document.getElementById('auto-train-banner-text').textContent = text;
+}
+
+function setRetrainButtonState(running, label){
+  const btn = document.getElementById('retrain-btn');
+  if(!btn) return;
+  btn.disabled = running;
+  btn.style.opacity = running ? '0.55' : '1';
+  btn.style.cursor = running ? 'not-allowed' : 'pointer';
+  btn.textContent = label || (running ? '⏳ Tumatakbo pa yung training...' : '⚡ I-retrain gamit ang bundled na sample photos');
+}
+
+// Called by the "I-retrain" button. If training is already running in the
+// background (e.g. the automatic first-run pass), this just tells the user
+// to wait instead of silently doing nothing — avoids the confusing "parang
+// walang nangyari tapos bigla na lang nakumpleto" experience.
+function manualRetrain(){
+  if(autoTrainRunning){
+    alert('Tumatakbo pa yung training sa background — panoorin mo na lang yung progress bar sa itaas, awtomatiko itong matatapos. Hindi na kailangang pindutin ulit.');
+    return;
+  }
+  autoTrainDoneOnce = false;
+  autoTrainFromBundledIfNeeded();
+}
+
+async function autoTrainFromBundledIfNeeded(){
+  if(autoTrainRunning || autoTrainDoneOnce) return;
+  if(typeof BUNDLED_SAMPLES === 'undefined') return;
+  autoTrainRunning = true;
+  setRetrainButtonState(true, '⏳ Naglo-load ng AI model...');
+  try{
+    // Wait for the AI model (up to ~20s), skip quietly if it never loads (offline, etc).
+    let tries = 0;
+    while(!aiReady && !aiLoadFailed && tries < 100){
+      await new Promise(r=>setTimeout(r,200));
+      tries++;
+    }
+    if(!aiReady) return;
+
+    // Give IndexedDB / Firestore a moment to finish loading existing samples first,
+    // so we correctly skip plants that are already trained.
+    setRetrainButtonState(true, '⏳ Kinukuha ang laman ng cloud...');
+    await new Promise(r=>setTimeout(r,1000));
+
+    const missing = PLANTS.filter(p => (!trainingData[p.id] || trainingData[p.id].length===0) && BUNDLED_SAMPLES[p.id] && BUNDLED_SAMPLES[p.id].length);
+    if(missing.length===0) return;
+
+    setAutoTrainBanner(true, `Ina-train ang AI gamit ang sample photos... (0 / ${missing.length})`);
+    setRetrainButtonState(true, `⏳ Ina-train... (0 / ${missing.length})`);
+    let done = 0;
+    for(const p of missing){
+      for(const path of BUNDLED_SAMPLES[p.id]){
+        try{
+          const img = await loadImageFromURL(path);
+          const vector = computeEmbeddingFromElement(img);
+          if(!vector) continue;
+          const tc = document.createElement('canvas');
+          tc.width = 220; tc.height = 220;
+          tc.getContext('2d').drawImage(img,0,0,220,220);
+          const thumb = tc.toDataURL('image/jpeg', 0.7);
+          await dbAddEmbedding(p.id, vector, thumb);
+          syncEmbeddingToFirestore(p.id, vector, thumb);
+          if(!trainingData[p.id]) trainingData[p.id] = [];
+          trainingData[p.id].push({vector, thumb});
+        }catch(e){ console.warn('Auto-train sample failed:', path, e); }
+      }
+      done++;
+      setAutoTrainBanner(true, `Ina-train ang AI gamit ang sample photos... (${done} / ${missing.length})`);
+      setRetrainButtonState(true, `⏳ Ina-train... (${done} / ${missing.length})`);
+      renderTrainList();
+      renderHome();
+      filterLibrary();
+    }
+    setAutoTrainBanner(false);
+  } finally {
+    autoTrainRunning = false;
+    autoTrainDoneOnce = true;
+    setRetrainButtonState(false);
+  }
+}
+
+/* ================= NAV ================= */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  const navBtn = document.querySelector(`.navbtn[data-screen="${name}"]`);
+  if(navBtn) navBtn.classList.add('active');
+  if(name!=='scan') stopCamera();
+}
+
+function goBackFromDetail(){ showScreen(currentDetailFrom); }
+
+/* ================= HOME RENDER ================= */
+function renderHome(){
+  document.getElementById('stat-total').textContent = PLANTS.length;
+  const chipRow = document.getElementById('home-chips');
+  chipRow.innerHTML = CATEGORIES.slice(1,6).map(c=>`<button class="chip" onclick="goCategory('${c}')">${c}</button>`).join('');
+  const carousel = document.getElementById('home-carousel');
+  carousel.innerHTML = PLANTS.slice(0,8).map(p=>specCard(p)).join('');
+  const carousel2 = document.getElementById('home-carousel2');
+  carousel2.innerHTML = PLANTS.slice(8,16).map(p=>specCard(p)).join('');
+}
+function goCategory(cat){ showScreen('library'); setTimeout(()=>{ selectChip(cat); },50); }
+
+function specCard(p){
+  return `<div class="spec-card" onclick="openDetail(${p.id},'home')">
+    <div class="icon-wrap">${plantVisualHTML(p,56)}</div>
+    <div class="name">${p.name}</div>
+    <div class="sci">${p.sci}</div>
+    <span class="tag">${p.cat}</span>
+  </div>`;
+}
+
+/* ================= LIBRARY ================= */
+let activeCat = 'All';
+function renderLibraryChips(){
+  const el = document.getElementById('lib-chips');
+  el.innerHTML = CATEGORIES.map(c=>`<button class="chip ${c===activeCat?'active':''}" onclick="selectChip('${c}')">${c}</button>`).join('');
+}
+function selectChip(cat){ activeCat = cat; renderLibraryChips(); filterLibrary(); }
+function filterLibrary(){
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  let list = PLANTS.filter(p=>{
+    const matchesCat = activeCat==='All' || p.cat===activeCat;
+    const matchesQ = !q || p.name.toLowerCase().includes(q) || p.sci.toLowerCase().includes(q) || p.local.join(' ').toLowerCase().includes(q);
+    return matchesCat && matchesQ;
+  });
+  const grid = document.getElementById('library-grid');
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Walang nahanap na halaman para sa "${q}". Subukan ang ibang keyword.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p=>specCard(p)).join('');
+}
+
+/* ================= VOICE SEARCH ================= */
+function setupVoice(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const hint = document.getElementById('voice-hint');
+  if(!SR){
+    hint.textContent = "Hindi suportado ng browser na ito ang voice search. Gamitin ang Google Chrome.";
+    document.getElementById('mic-btn').style.opacity = 0.4;
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'en-PH';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('search-input').value = transcript;
+    filterLibrary();
+    hint.textContent = `Narinig: "${transcript}"`;
+  };
+  recognition.onerror = ()=>{ hint.textContent = "Hindi na-detect ang boses. Subukan ulit."; stopListening(); };
+  recognition.onend = ()=>{ stopListening(); };
+}
+function toggleVoiceSearch(){
+  if(!recognition){ return; }
+  if(listening){ recognition.stop(); stopListening(); return; }
+  listening = true;
+  document.getElementById('mic-btn').classList.add('listening');
+  document.getElementById('voice-hint').textContent = "Nakikinig... sabihin ang pangalan ng halaman.";
+  recognition.start();
+}
+function stopListening(){
+  listening = false;
+  document.getElementById('mic-btn').classList.remove('listening');
+}
+
+/* ================= DETAIL ================= */
+function openDetail(id, from){
+  const p = PLANTS.find(x=>x.id===id);
+  if(!p) return;
+  currentDetailFrom = from || 'library';
+  document.getElementById('detail-icon').innerHTML = plantVisualHTML(p,110);
+  document.getElementById('detail-name').textContent = p.name;
+  document.getElementById('detail-sci').textContent = p.sci;
+  document.getElementById('detail-tags').innerHTML = `<span class="tagpill">${p.cat}</span>`;
+  document.getElementById('detail-localnames').innerHTML = p.local.map(n=>`<span>${n}</span>`).join('');
+  document.getElementById('detail-desc').textContent = p.desc;
+  document.getElementById('detail-parts').textContent = p.parts;
+  document.getElementById('detail-uses').innerHTML = p.uses.map(u=>`<li>${u}</li>`).join('');
+  document.getElementById('detail-benefits').innerHTML = p.benefits.map(b=>`<li>${b}</li>`).join('');
+  document.getElementById('detail-prep').textContent = p.prep;
+  document.getElementById('detail-caution').innerHTML = `<strong>Paalala:</strong> ${p.caution}`;
+  showScreen('detail');
+}
+
+/* ================= TRAIN AI SCREEN ================= */
+function renderTrainChips(){
+  const el = document.getElementById('train-chips');
+  el.innerHTML = CATEGORIES.map(c=>`<button class="chip ${c===trainActiveCat?'active':''}" onclick="selectTrainChip('${c}')">${c}</button>`).join('');
+}
+function selectTrainChip(cat){ trainActiveCat = cat; renderTrainChips(); renderTrainList(); }
+
+function renderTrainList(){
+  const list = PLANTS.filter(p=> trainActiveCat==='All' || p.cat===trainActiveCat);
+  const container = document.getElementById('train-list');
+  if(container){
+    container.innerHTML = list.map(p=>{
+      const samples = trainingData[p.id] || [];
+      const thumbs = samples.slice(0,5).map(s=>`<img src="${s.thumb}">`).join('');
+      return `<div class="train-item">
+        <div class="icon-wrap">${leafSVG(p.color,26)}</div>
+        <div class="info">
+          <div class="n">${p.name}</div>
+          <div class="samples ${samples.length>0?'has-data':''}">${samples.length} sample${samples.length===1?'':'s'} na-train</div>
+          ${thumbs?`<div class="thumbs">${thumbs}</div>`:''}
+        </div>
+        <button class="train-add-btn" onclick="startTrainCapture(${p.id})" title="Magdagdag ng larawan">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+  }
+  const totalTrainedPlants = PLANTS.filter(p=>(trainingData[p.id]||[]).length>0).length;
+  const bar = document.getElementById('train-overall-bar');
+  const lab = document.getElementById('train-overall-lab');
+  if(bar){ bar.style.width = Math.round(totalTrainedPlants/PLANTS.length*100)+'%'; }
+  if(lab){ lab.textContent = `${totalTrainedPlants} / ${PLANTS.length} trained`; }
+}
+
+function startTrainCapture(plantId){
+  trainTargetPlantId = plantId;
+  document.getElementById('train-file-input').click();
+}
+
+function handleTrainUpload(evt){
+  const file = evt.target.files[0];
+  evt.target.value = '';
+  if(!file || trainTargetPlantId==null) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = async function(){
+      const doAdd = async ()=>{
+        const vector = computeEmbeddingFromElement(img);
+        if(!vector){ alert('Naglo-load pa ang AI model, sandali lang at subukan ulit.'); return; }
+        const tc = document.createElement('canvas');
+        tc.width = 220; tc.height = 220;
+        tc.getContext('2d').drawImage(img,0,0,220,220);
+        const thumb = tc.toDataURL('image/jpeg', 0.7);
+        await dbAddEmbedding(trainTargetPlantId, vector, thumb);
+        syncEmbeddingToFirestore(trainTargetPlantId, vector, thumb);
+        if(!trainingData[trainTargetPlantId]) trainingData[trainTargetPlantId] = [];
+        trainingData[trainTargetPlantId].push({vector, thumb});
+        renderTrainList();
+        renderHome();
+        filterLibrary();
+      };
+      if(!aiReady){
+        if(aiLoadFailed){ alert('Hindi ma-load ang AI model. Suriin ang internet connection mo at i-reload ang app.'); return; }
+        setTimeout(doAdd, 800);
+      } else {
+        doAdd();
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function resetTrainingData(){
+  if(!confirm('Sigurado ka bang gusto mong burahin lahat ng training data (kasama na yung naka-sync sa cloud)?')) return;
+  await dbClearAll();
+  trainingData = {};
+  renderTrainList();
+  renderHome();
+  filterLibrary();
+  if(firestoreConnected){
+    try{
+      const snap = await firestoreDB.collection(EMBEDDINGS_COLLECTION).get();
+      const batch = firestoreDB.batch();
+      snap.forEach(doc=> batch.delete(doc.ref));
+      await batch.commit();
+    }catch(e){ console.warn('Could not clear cloud training samples:', e); }
+  }
+  autoTrainDoneOnce = false;
+  autoTrainFromBundledIfNeeded();
+}
+
+/* ================= SCAN / CAMERA ================= */
+async function goToScan(){
+  showScreen('scan');
+  resetScanUI();
+  const wrap = document.getElementById('camera-wrap');
+  const video = document.getElementById('cam-video');
+  const offMsg = document.getElementById('camera-off-msg');
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    video.srcObject = stream;
+    video.style.display='block';
+    offMsg.style.display='none';
+    document.getElementById('scan-frame').style.display='block';
+  }catch(err){
+    video.style.display='none';
+    document.getElementById('scan-frame').style.display='none';
+    offMsg.style.display='flex';
+    offMsg.style.alignItems='center';
+    offMsg.style.justifyContent='center';
+    offMsg.style.height='100%';
+    offMsg.innerHTML = "📷 Hindi available ang camera sa device na ito.<br><br>Gamitin ang upload button sa ibaba para mag-upload ng larawan ng halaman.";
+    document.getElementById('scan-hint').textContent = "I-tap ang upload icon para pumili ng larawan";
+  }
+}
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+}
+function resetScanUI(){
+  document.getElementById('cam-video').style.display='block';
+  document.getElementById('captured-img').style.display='none';
+  document.getElementById('analyzing-wrap').classList.remove('show');
+  document.getElementById('camera-off-msg').style.display='none';
+  document.getElementById('scan-hint').textContent = "Ilagay ang dahon sa loob ng frame";
+}
+
+function capturePhoto(){
+  const video = document.getElementById('cam-video');
+  if(!stream || video.style.display==='none'){ return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 400;
+  canvas.height = video.videoHeight || 400;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  capturedDataUrl = canvas.toDataURL('image/jpeg');
+  showCapturedFrame(capturedDataUrl);
+  runAnalysis(canvas);
+}
+function handleFileUpload(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    capturedDataUrl = e.target.result;
+    showCapturedFrame(capturedDataUrl);
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img,0,0);
+      runAnalysis(canvas);
+    };
+    img.src = capturedDataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+function showCapturedFrame(dataUrl){
+  const video = document.getElementById('cam-video');
+  const img = document.getElementById('captured-img');
+  video.style.display='none';
+  img.src = dataUrl;
+  img.style.display='block';
+  document.getElementById('scan-frame').style.display='none';
+}
+
+function runAnalysis(canvas){
+  const aw = document.getElementById('analyzing-wrap');
+  aw.classList.add('show');
+  const totalSamples = Object.values(trainingData).reduce((s,arr)=>s+arr.length,0);
+  const usingRealAI = aiReady && totalSamples >= 1;
+  const msgs = usingRealAI
+    ? ["Kinukuha ang MobileNet features...","Ikinukumpara sa mga na-train na sample...","Kinakalkula ang kNN confidence...","Halos tapos na..."]
+    : ["Sinusuri ang larawan...","Hinahambing sa herbal database...","Kinakalkula ang confidence score...","Halos tapos na..."];
+  let i=0;
+  const msgEl = document.getElementById('analyzing-msg');
+  const interval = setInterval(()=>{ msgEl.textContent = msgs[i % msgs.length]; i++; }, 500);
+
+  setTimeout(async ()=>{
+    clearInterval(interval);
+    let match;
+    if(usingRealAI){
+      match = matchWithAI(canvas);
+    }
+    if(!match){
+      match = pickPlantFromImageDemo(canvas);
+    }
+    aw.classList.remove('show');
+    showResult(match.plant, match.confidence, match.mode, match.alts, match.lowConfidence);
+  }, usingRealAI ? 1400 : 2000);
+}
+
+/* Real AI matching: MobileNet embedding of the captured photo, compared via cosine similarity
+   (k-Nearest Neighbor, k=1 per class) against embeddings of the sample photos added in "Train AI". */
+function matchWithAI(canvas){
+  try{
+    const queryVec = computeEmbeddingFromElement(canvas);
+    if(!queryVec) return null;
+    const perPlantScore = {};
+    Object.keys(trainingData).forEach(plantId=>{
+      const samples = trainingData[plantId];
+      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector));
+      // Average similarity across all trained samples for this plant — more stable
+      // than relying on a single nearest neighbor when sample counts are small.
+      const avg = sims.reduce((a,b)=>a+b,0) / sims.length;
+      perPlantScore[plantId] = avg;
+    });
+    const ranked = Object.keys(perPlantScore)
+      .map(pid=>({plant: PLANTS.find(p=>p.id===Number(pid)), sim: perPlantScore[pid]}))
+      .filter(r=>r.plant)
+      .sort((a,b)=>b.sim-a.sim);
+    if(ranked.length===0) return null;
+    const top = ranked[0];
+    // No artificial floor here — a genuinely weak match should show a low
+    // percentage rather than being dressed up, so the person can tell when
+    // more training samples are needed for that plant.
+    const confidence = Math.round(Math.max(0, Math.min(99, top.sim*100)));
+    const alts = ranked.slice(1,4).map(r=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, r.sim*100)))}));
+    // "Low confidence" means the identification is genuinely uncertain — either the
+    // top match barely beats the runner-up (ambiguous) or the raw similarity is very
+    // weak overall. A clear, well-separated top match shouldn't be flagged just
+    // because the raw cosine-similarity number happens to be a modest percentage.
+    const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
+    const lowConfidence = top.sim < 0.35 || margin < 0.06;
+    return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
+  }catch(e){
+    console.warn('AI match error, falling back to demo mode:', e);
+    return null;
+  }
+}
+
+/* Fallback demo matching (used only when the AI model or training samples aren't available yet):
+   derives a pseudo-consistent index from average image color so the full scan flow still works. */
+function pickPlantFromImageDemo(canvas){
+  const ctx = canvas.getContext('2d');
+  let r=0,g=0,b=0,count=0;
+  try{
+    const step = Math.max(1, Math.floor(canvas.width/40));
+    const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    for(let y=0;y<canvas.height;y+=step){
+      for(let x=0;x<canvas.width;x+=step){
+        const idx = (y*canvas.width+x)*4;
+        r+=data[idx]; g+=data[idx+1]; b+=data[idx+2]; count++;
+      }
+    }
+  }catch(e){ /* canvas may be tainted; fall back to random */ }
+  let seed;
+  if(count>0){
+    r/=count; g/=count; b/=count;
+    seed = Math.floor(r+g*2+b*3);
+  } else {
+    seed = Math.floor(Math.random()*1000);
+  }
+  const idx = seed % PLANTS.length;
+  const plant = PLANTS[idx];
+  const confidence = 84 + (seed % 13); // 84-96%
+  const alts = PLANTS.filter(p=>p.id!==plant.id).sort(()=>0.5-Math.random()).slice(0,3)
+    .map(p=>({plant:p, pct: Math.max(40, confidence - 15 - Math.floor(Math.random()*30))}));
+  return {plant, confidence, mode:'demo', alts};
+}
+
+function showResult(plant, confidence, mode, alts, lowConfidence){
+  lastMatchedPlant = plant;
+  document.getElementById('result-icon').innerHTML = plantVisualHTML(plant,100);
+  document.getElementById('result-name').textContent = plant.name;
+  document.getElementById('result-sci').textContent = plant.sci;
+  document.getElementById('result-desc').textContent = plant.desc;
+  document.getElementById('conf-pct').textContent = confidence+'%';
+  const bar = document.getElementById('conf-bar');
+  bar.style.width='0%';
+  setTimeout(()=>{ bar.style.width = confidence+'%'; }, 80);
+  document.getElementById('result-view-btn').onclick = ()=>openDetail(plant.id,'result');
+
+  const modeTag = document.getElementById('result-mode-tag');
+  const lowConfEl = document.getElementById('result-low-confidence');
+  if(mode==='real'){
+    modeTag.textContent = 'AI Match — Trained Model (MobileNet + kNN)';
+    modeTag.className = 'match-mode-tag real';
+    if(lowConfidence){
+      lowConfEl.style.display = 'block';
+      lowConfEl.textContent = '⚠️ Mababang confidence — magdagdag pa ng training samples para dito at sa ibang halaman na magkatulad ang hugis, sa "Train AI" tab.';
+    } else {
+      lowConfEl.style.display = 'none';
+    }
+  } else {
+    modeTag.textContent = 'Demo Mode — magdagdag ng samples sa Train AI tab';
+    modeTag.className = 'match-mode-tag demo';
+    lowConfEl.style.display = 'none';
+  }
+
+  document.getElementById('alt-list').innerHTML = (alts||[]).map(a=>{
+    return `<div class="alt-row" onclick="openDetail(${a.plant.id},'result')">
+      <div class="icon-wrap">${plantVisualHTML(a.plant,38)}</div>
+      <div class="info"><div class="n">${a.plant.name}</div><div class="p">${a.plant.sci}</div></div>
+      <div class="p2">${a.pct}%</div>
+    </div>`;
+  }).join('');
+
+  showScreen('result');
+}
+
+/* ================= INIT ================= */
+function updateClock(){
+  const d = new Date();
+  let h = d.getHours(); const m = d.getMinutes().toString().padStart(2,'0');
+  const ampm = h>=12?'PM':'AM'; h = h%12; if(h===0) h=12;
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+updateClock(); setInterval(updateClock,30000);
+
+renderHome();
+renderLibraryChips();
+filterLibrary();
+setupVoice();
+renderTrainChips();
+if(!isFirebaseConfigured()){
+  // Offline / no-cloud fallback: use the local IndexedDB copy as the only source.
+  loadTrainingDataFromDB();
+}
+// When Firebase IS configured, initFirebase() below loads training samples
+// from Firestore only — this avoids counting the same sample twice (once from
+// the local IndexedDB cache, once from its synced Firestore copy).
+loadAIModel();
+initFirebase();
+autoTrainFromBundledIfNeeded();
+
+/* ================= PWA: service worker + install prompt ================= */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+function isRunningStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+// Unified "I-download ang App" handler — works whether or not the browser
+// fired the native install prompt yet, and on every platform (Android,
+// iPhone, or desktop). This guarantees anyone who opens the link or scans
+// the QR code sees a way to install, not just users of certain browsers.
+function installApp(){
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+      deferredInstallPrompt = null;
+      const btn = document.getElementById('install-app-btn');
+      if (btn) btn.style.display = 'none';
+    });
+    return;
+  }
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = /android/i.test(ua);
+  if (isIOS) {
+    alert('Paano i-install sa iPhone/iPad:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.');
+  } else if (isAndroid) {
+    alert('Paano i-install sa Android:\n\n1. Gamitin ang Chrome\n2. I-tap ang ⋮ (3 tuldok) sa taas-kanan\n3. I-tap "Add to Home screen" o "Install app"\n4. I-tap "Install"\n\nLalabas na ang app icon sa Home Screen mo.');
+  } else {
+    alert('Paano i-install sa Laptop/Desktop (Chrome o Edge):\n\n1. Hanapin ang install icon (⊕) sa dulo ng address bar\n2. I-click ito, tapos "Install"\n\nKung wala kang makita, gamitin mo na lang ang app dito sa browser — gagana pa rin ito nang normal, offline pa rin.');
+  }
+}
+
+// Show the button on load unless the app is already installed/running
+// standalone. This makes it always visible instead of only appearing for
+// browsers that fire beforeinstallprompt.
+(function initInstallButtonVisibility(){
+  const btn = document.getElementById('install-app-btn');
+  if (!btn) return;
+  if (isRunningStandalone()) { btn.style.display = 'none'; return; }
+  btn.style.display = 'inline-flex';
+})();
+</script>
+</body>
+</html>
