@@ -1177,8 +1177,27 @@ async function loadAIModel(){
 
 function computeEmbeddingFromElement(el){
   if(!mobilenetModel) return null;
+  // Center-crop to a square before inference. MobileNet's internal resize squashes
+  // non-square input to fit its input size, which distorts leaf shape/proportions —
+  // and phone photos (portrait) vs. bundled training photos (whatever aspect they
+  // were shot in) rarely share the same aspect ratio. Cropping both training and
+  // query images the same way here (single shared function, every call site) keeps
+  // them on equal footing instead of comparing a stretched query against
+  // differently-stretched samples.
+  const srcW = el.videoWidth || el.naturalWidth || el.width;
+  const srcH = el.videoHeight || el.naturalHeight || el.height;
+  let cropEl = el;
+  if(srcW && srcH && srcW !== srcH){
+    const side = Math.min(srcW, srcH);
+    const sx = (srcW - side) / 2;
+    const sy = (srcH - side) / 2;
+    const sq = document.createElement('canvas');
+    sq.width = 224; sq.height = 224;
+    sq.getContext('2d').drawImage(el, sx, sy, side, side, 0, 0, 224, 224);
+    cropEl = sq;
+  }
   return tf.tidy(()=>{
-    const t = mobilenetModel.infer(el, true);
+    const t = mobilenetModel.infer(cropEl, true);
     return Array.from(t.dataSync());
   });
 }
@@ -1666,10 +1685,13 @@ function matchWithAI(canvas){
     const perPlantScore = {};
     Object.keys(trainingData).forEach(plantId=>{
       const samples = trainingData[plantId];
-      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector));
-      // Average similarity across all trained samples for this plant — more stable
-      // than relying on a single nearest neighbor when sample counts are small.
-      const avg = sims.reduce((a,b)=>a+b,0) / sims.length;
+      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector)).sort((a,b)=>b-a);
+      // Average over the best-matching few samples per class (top-K) instead of all
+      // of them — with 20 bundled samples per plant, a handful of blurry/odd-angle
+      // photos shouldn't drag down an otherwise strong match.
+      const k = Math.min(5, sims.length);
+      const topK = sims.slice(0, k);
+      const avg = topK.reduce((a,b)=>a+b,0) / topK.length;
       perPlantScore[plantId] = avg;
     });
     const ranked = Object.keys(perPlantScore)
@@ -1678,17 +1700,25 @@ function matchWithAI(canvas){
       .sort((a,b)=>b.sim-a.sim);
     if(ranked.length===0) return null;
     const top = ranked[0];
-    // No artificial floor here — a genuinely weak match should show a low
-    // percentage rather than being dressed up, so the person can tell when
-    // more training samples are needed for that plant.
-    const confidence = Math.round(Math.max(0, Math.min(99, top.sim*100)));
-    const alts = ranked.slice(1,4).map(r=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, r.sim*100)))}));
     // "Low confidence" means the identification is genuinely uncertain — either the
     // top match barely beats the runner-up (ambiguous) or the raw similarity is very
-    // weak overall. A clear, well-separated top match shouldn't be flagged just
-    // because the raw cosine-similarity number happens to be a modest percentage.
+    // weak overall. This stays keyed off the raw cosine similarity/margin, unaffected
+    // by the display calibration below, so it keeps flagging genuinely uncertain matches.
     const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
     const lowConfidence = top.sim < 0.35 || margin < 0.06;
+    // Raw MobileNet cosine similarity between same-domain photos (leaves vs. leaves)
+    // sits in a compressed band — even a clearly-correct top match often only scores
+    // ~0.5-0.6 raw, with the runner-up not far behind, so showing that raw number as
+    // "confidence" reads as low even when the classification itself is solid. Instead,
+    // convert the ranked similarities into a relative (softmax-style) confidence: a
+    // clear winner is pushed toward a high, readable percentage, while a genuinely
+    // ambiguous top match (small margin over the runner-up) still stays modest — same
+    // underlying signal as the low-confidence flag above, just on a readable scale.
+    const T = 0.08; // temperature — lower = more separation between top and runner-up
+    const expScores = ranked.map(r => Math.exp(r.sim / T));
+    const sumExp = expScores.reduce((a,b)=>a+b, 0);
+    const confidence = Math.round(Math.max(1, Math.min(99, (expScores[0] / sumExp) * 100)));
+    const alts = ranked.slice(1,4).map((r,i)=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, (expScores[i+1]/sumExp)*100)))}));
     return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
   }catch(e){
     console.warn('AI match error, falling back to demo mode:', e);
