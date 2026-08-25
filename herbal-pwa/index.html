@@ -98,11 +98,11 @@ body{
     height:auto; min-height:70px;
     padding-bottom:env(safe-area-inset-bottom, 10px);
   }
-  .navbtn{ font-size:13px; gap:5px; padding:10px 2px 8px; }
-  .navbtn svg{ width:27px; height:27px; }
-  .navbtn.scanbtn{ top:-16px; }
-  .navbtn.scanbtn .scanicon-wrap{ width:60px; height:60px; }
-  .navbtn.scanbtn svg{ width:29px; height:29px; }
+  .navbtn{ font-size:12px; gap:5px; padding:10px 2px 8px; }
+  .navbtn svg{ width:24px; height:24px; }
+  .navbtn.scanbtn{ top:-14px; }
+  .navbtn.scanbtn .scanicon-wrap{ width:56px; height:56px; }
+  .navbtn.scanbtn svg{ width:26px; height:26px; }
 }
 /* When installed/launched as a standalone PWA (from Home Screen), always go
    fullscreen regardless of viewport width detection above. */
@@ -121,11 +121,11 @@ body{
     height:auto; min-height:70px;
     padding-bottom:env(safe-area-inset-bottom, 10px);
   }
-  .navbtn{ font-size:13px; gap:5px; padding:10px 2px 8px; }
-  .navbtn svg{ width:27px; height:27px; }
-  .navbtn.scanbtn{ top:-16px; }
-  .navbtn.scanbtn .scanicon-wrap{ width:60px; height:60px; }
-  .navbtn.scanbtn svg{ width:29px; height:29px; }
+  .navbtn{ font-size:12px; gap:5px; padding:10px 2px 8px; }
+  .navbtn svg{ width:24px; height:24px; }
+  .navbtn.scanbtn{ top:-14px; }
+  .navbtn.scanbtn .scanicon-wrap{ width:56px; height:56px; }
+  .navbtn.scanbtn svg{ width:26px; height:26px; }
 }
 .statusbar .icons{display:flex; gap:5px; align-items:center;}
 .screens{ flex:1 1 auto; position:relative; overflow:hidden; }
@@ -149,7 +149,6 @@ body{
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:3px; background:none; border:none; color:var(--ink-soft); font-family:'Inter';
   font-size:9.5px; font-weight:600; letter-spacing:.01em; cursor:pointer; padding:8px 2px 12px;
-  white-space:nowrap;
 }
 .navbtn svg{ width:19px; height:19px; stroke:var(--ink-soft); fill:none; stroke-width:1.7; }
 .navbtn.active{ color:var(--forest); }
@@ -240,6 +239,17 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 /* ---------- Detail screen ---------- */
 .detail-hero{ background:linear-gradient(165deg, var(--forest), var(--forest-light)); padding:50px 22px 26px; position:relative; }
 .back-btn{ position:absolute; top:16px; left:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.save-btn{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.save-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2; transition:fill .15s, stroke .15s; }
+.save-btn.saved svg{ fill:var(--gold); stroke:var(--gold); }
+.saved-badge{ position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(30,58,43,0.85); display:flex; align-items:center; justify-content:center; z-index:5; }
+.saved-badge svg{ width:11px; height:11px; fill:var(--gold); stroke:var(--gold); stroke-width:2; }
+.admin-label{ display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:700; color:var(--forest); }
+.admin-input{ font-family:'Inter'; font-size:13px; font-weight:400; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 11px; resize:vertical; }
+.admin-item-row{ display:flex; gap:8px; }
+.admin-item-row button{ flex:1; padding:9px; border-radius:10px; border:none; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Inter'; }
+.admin-edit-btn{ background:var(--parchment-dark); color:var(--forest); }
+.admin-del-btn{ background:#F7E9DD; color:var(--clay); }
 .back-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2.2; }
 .detail-hero .icon-wrap{ width:120px; height:120px; margin:0 auto; background:rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.18);}
 .detail-hero .icon-wrap svg{ width:74px; height:74px; }
@@ -406,7 +416,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         </button>
         <button id="install-app-btn" onclick="installApp()" style="display:none;margin-top:10px;margin-left:8px;background:rgba(255,255,255,0.14);color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:30px;border:1px solid rgba(255,255,255,0.3);cursor:pointer;align-items:center;gap:7px;">
           <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:#fff;fill:none;stroke-width:2;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-          <span id="install-app-btn-label">📲 I-download ang App</span>
+          <span id="install-app-btn-label">I-install ang App</span>
         </button>
       </div>
 
@@ -414,6 +424,11 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <div class="stat-card"><div class="num" id="stat-total">25</div><div class="lab">Halaman</div></div>
         <div class="stat-card"><div class="num">10</div><div class="lab">DOH-Approved</div></div>
         <div class="stat-card"><div class="num">8</div><div class="lab">Kategorya</div></div>
+      </div>
+
+      <div id="home-saved-section" style="display:none;">
+        <div class="section-title"><h3>Naka-save Mo</h3><button class="see-all" onclick="showSavedInLibrary()">Tingnan lahat</button></div>
+        <div class="carousel" id="home-saved-carousel"></div>
       </div>
 
       <div class="section-title"><h3>I-explore ayon sa kategorya</h3></div>
@@ -517,6 +532,9 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <button class="back-btn" onclick="goBackFromDetail()">
           <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
         </button>
+        <button class="save-btn" id="detail-save-btn" onclick="toggleBookmarkCurrent()">
+          <svg viewBox="0 0 24 24" id="detail-save-icon"><path d="M6 4a2 2 0 012-2h8a2 2 0 012 2v17l-6-4-6 4V4z"/></svg>
+        </button>
         <div class="icon-wrap" id="detail-icon"></div>
         <h2 id="detail-name">—</h2>
         <div class="sci" id="detail-sci">—</div>
@@ -566,14 +584,8 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <div class="bar-bg"><div class="bar-fill" id="train-overall-bar" style="width:0%;"></div></div>
         <div class="lab" id="train-overall-lab">0 / 25 trained</div>
       </div>
-      <div id="auto-train-banner" style="display:none; align-items:center; gap:8px; margin:0 20px 14px; background:var(--forest); color:#fff; border-radius:12px; padding:10px 14px; font-size:12px; font-weight:600;">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;flex:0 0 auto;animation:spin 1s linear infinite;"><path d="M12 2a10 10 0 100 20"/></svg>
-        <span id="auto-train-banner-text">Ina-train ang AI...</span>
-      </div>
-      <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
       <div class="chiprow" id="train-chips" style="margin-bottom:10px;"></div>
       <div class="train-list" id="train-list"></div>
-      <button id="retrain-btn" class="reset-ai-btn" onclick="manualRetrain()" style="margin-bottom:8px;">⚡ I-retrain gamit ang bundled na sample photos</button>
       <button class="reset-ai-btn" onclick="resetTrainingData()">I-reset ang lahat ng training data</button>
       <input type="file" id="train-file-input" accept="image/*" capture="environment" style="display:none;" onchange="handleTrainUpload(event)">
     </div>
@@ -611,9 +623,55 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <h4 style="margin-top:20px;">Tungkol sa AI Plant Scanner</h4>
         <p>Gumagamit ang scanner ng <strong>MobileNet</strong>, isang pre-trained deep learning/CNN model, bilang feature extractor — direkta itong tumatakbo sa loob ng browser/app gamit ang TensorFlow.js, walang kailangang external server. Ang bawat larawang naka-scan ay ikinukumpara (k-Nearest Neighbors classification) sa mga sample photo na na-train sa "Train AI" tab. Ito ang tinatawag na <em>transfer learning</em> — isang praktikal na paraan ng image classification na hindi nangangailangan ng malaking dataset o GPU training mula sa simula, angkop para sa mobile-based application.</p>
         <p>Kailangan munang magdagdag ng ilang sample photo bawat halaman sa "Train AI" tab bago maging tumpak ang recognition. Kung wala pang sapat na training data, gagamit ang app ng demo-mode matching para maipakita pa rin ang buong daloy ng sistema.</p>
+
+        <h4 style="margin-top:20px;">Pangangasiwa ng Datos</h4>
+        <p>May protektadong Admin Panel ang system para sa pagdaragdag, pag-edit, at pagbura ng mga plant record nang direkta sa loob ng app, bukod pa sa Firebase Console.</p>
+        <button class="seed-db-btn" style="background:var(--gold-deep);" onclick="adminLogin()">🔑 Buksan ang Admin Panel</button>
       </div>
       <div class="footer-note">Herbal IS Prototype · v1.0 · Built for thesis defense</div>
     </div>
+
+    <!-- ============ ADMIN PANEL ============ -->
+    <div class="screen" id="screen-admin">
+      <div class="lib-header">
+        <button class="back-btn" style="position:static;background:var(--parchment-dark);margin-bottom:10px;" onclick="showScreen('about')">
+          <svg viewBox="0 0 24 24" style="stroke:var(--forest);"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="eyebrow">Pangangasiwa ng Sistema</div>
+        <h1 style="font-size:22px;">Admin Panel</h1>
+      </div>
+      <div class="train-note">
+        Dito mo pwedeng idagdag, i-edit, o burahin ang mga plant record. Direktang naka-sync ang mga pagbabago sa Firestore kapag naka-connect.
+      </div>
+      <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;" onclick="openAdminEditor(null)">+ Magdagdag ng Bagong Halaman</button>
+      <div class="train-list" id="admin-list" style="padding-top:6px;"></div>
+    </div>
+
+    <!-- Admin edit overlay -->
+    <div id="admin-editor-overlay" style="display:none;position:fixed;inset:0;background:rgba(20,15,10,0.55);z-index:200;align-items:flex-end;justify-content:center;">
+      <div style="background:var(--parchment);width:100%;max-width:390px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:20px 20px 30px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="font-family:'Fraunces';color:var(--forest);font-size:18px;" id="admin-editor-title">Mag-edit ng Halaman</h3>
+          <button onclick="closeAdminEditor()" style="background:var(--parchment-dark);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label class="admin-label">Pangalan<input type="text" id="admin-f-name" class="admin-input"></label>
+          <label class="admin-label">Scientific Name<input type="text" id="admin-f-sci" class="admin-input"></label>
+          <label class="admin-label">Kategorya
+            <select id="admin-f-cat" class="admin-input"></select>
+          </label>
+          <label class="admin-label">Ibang Tawag (comma-separated)<input type="text" id="admin-f-local" class="admin-input"></label>
+          <label class="admin-label">Deskripsyon<textarea id="admin-f-desc" class="admin-input" rows="3"></textarea></label>
+          <label class="admin-label">Ginagamit na Bahagi<input type="text" id="admin-f-parts" class="admin-input"></label>
+          <label class="admin-label">Medisinal na Gamit (isang linya bawat isa)<textarea id="admin-f-uses" class="admin-input" rows="3"></textarea></label>
+          <label class="admin-label">Benepisyo (isang linya bawat isa)<textarea id="admin-f-benefits" class="admin-input" rows="3"></textarea></label>
+          <label class="admin-label">Paraan ng Paggamit<textarea id="admin-f-prep" class="admin-input" rows="2"></textarea></label>
+          <label class="admin-label">Paalala/Caution<textarea id="admin-f-caution" class="admin-input" rows="2"></textarea></label>
+        </div>
+        <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:16px;" onclick="saveAdminPlant()">I-save</button>
+      </div>
+    </div>
+
 
   </div>
 
@@ -1049,6 +1107,144 @@ async function seedFirestore(){
   }
 }
 
+/* ================= ADMIN PANEL ================= */
+/* Simple client-side password gate — sufficient for a thesis demo/prototype,
+   but NOT real authentication. For any real deployment, replace this with
+   Firebase Authentication + Firestore Security Rules (see Chapter 5
+   recommendations) before exposing write access publicly. */
+const ADMIN_PASSWORD = "herbal2026";
+let adminEditingId = null;
+
+function adminLogin(){
+  const pw = prompt('Ilagay ang Admin Password:');
+  if(pw === null) return;
+  if(pw === ADMIN_PASSWORD){
+    showScreen('admin');
+    renderAdminList();
+  } else {
+    alert('Maling password.');
+  }
+}
+
+function renderAdminList(){
+  const list = document.getElementById('admin-list');
+  if(!list) return;
+  list.innerHTML = PLANTS.map(p=>`
+    <div class="train-item">
+      <div class="icon-wrap">${plantVisualHTML(p,44)}</div>
+      <div class="info" style="flex:1;">
+        <div class="n">${p.name}</div>
+        <div class="samples">${p.cat}</div>
+        <div class="admin-item-row" style="margin-top:8px;">
+          <button class="admin-edit-btn" onclick="openAdminEditor(${p.id})">Edit</button>
+          <button class="admin-del-btn" onclick="deleteAdminPlant(${p.id})">Burahin</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAdminEditor(id){
+  adminEditingId = id;
+  const catSelect = document.getElementById('admin-f-cat');
+  catSelect.innerHTML = CATEGORIES.filter(c=>c!=='All').map(c=>`<option value="${c}">${c}</option>`).join('');
+
+  if(id === null){
+    document.getElementById('admin-editor-title').textContent = 'Magdagdag ng Bagong Halaman';
+    document.getElementById('admin-f-name').value = '';
+    document.getElementById('admin-f-sci').value = '';
+    catSelect.value = CATEGORIES[1];
+    document.getElementById('admin-f-local').value = '';
+    document.getElementById('admin-f-desc').value = '';
+    document.getElementById('admin-f-parts').value = '';
+    document.getElementById('admin-f-uses').value = '';
+    document.getElementById('admin-f-benefits').value = '';
+    document.getElementById('admin-f-prep').value = '';
+    document.getElementById('admin-f-caution').value = '';
+  } else {
+    const p = PLANTS.find(x=>x.id===id);
+    if(!p) return;
+    document.getElementById('admin-editor-title').textContent = 'Mag-edit: ' + p.name;
+    document.getElementById('admin-f-name').value = p.name;
+    document.getElementById('admin-f-sci').value = p.sci;
+    catSelect.value = p.cat;
+    document.getElementById('admin-f-local').value = (p.local||[]).join(', ');
+    document.getElementById('admin-f-desc').value = p.desc;
+    document.getElementById('admin-f-parts').value = p.parts;
+    document.getElementById('admin-f-uses').value = (p.uses||[]).join('\n');
+    document.getElementById('admin-f-benefits').value = (p.benefits||[]).join('\n');
+    document.getElementById('admin-f-prep').value = p.prep;
+    document.getElementById('admin-f-caution').value = p.caution;
+  }
+  document.getElementById('admin-editor-overlay').style.display = 'flex';
+}
+
+function closeAdminEditor(){
+  document.getElementById('admin-editor-overlay').style.display = 'none';
+  adminEditingId = null;
+}
+
+async function saveAdminPlant(){
+  const name = document.getElementById('admin-f-name').value.trim();
+  if(!name){ alert('Kailangan ng pangalan ng halaman.'); return; }
+  const id = adminEditingId===null ? (Math.max(0,...PLANTS.map(p=>p.id)) + 1) : adminEditingId;
+  const existing = PLANTS.find(p=>p.id===id);
+  const plant = {
+    id,
+    name,
+    sci: document.getElementById('admin-f-sci').value.trim(),
+    cat: document.getElementById('admin-f-cat').value,
+    color: existing ? existing.color : (id % 6),
+    local: document.getElementById('admin-f-local').value.split(',').map(s=>s.trim()).filter(Boolean),
+    desc: document.getElementById('admin-f-desc').value.trim(),
+    parts: document.getElementById('admin-f-parts').value.trim(),
+    uses: document.getElementById('admin-f-uses').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    benefits: document.getElementById('admin-f-benefits').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    prep: document.getElementById('admin-f-prep').value.trim(),
+    caution: document.getElementById('admin-f-caution').value.trim(),
+  };
+
+  if(existing) Object.assign(existing, plant);
+  else PLANTS.push(plant);
+  PLANTS.sort((a,b)=>a.id-b.id);
+
+  if(firestoreConnected){
+    try{
+      await firestoreDB.collection(PLANTS_COLLECTION).doc(String(id)).set(plant);
+    }catch(e){
+      console.error(e);
+      alert('Na-save nang lokal, pero may error sa pag-sync sa Firestore: ' + e.message);
+    }
+  } else {
+    alert('Paalala: hindi naka-connect sa Firestore, kaya lokal lang ang pagbabagong ito (mawawala pag na-reload ang page).');
+  }
+
+  closeAdminEditor();
+  renderAdminList();
+  renderHome();
+  renderLibraryChips();
+  filterLibrary();
+  renderTrainChips();
+  renderTrainList();
+}
+
+async function deleteAdminPlant(id){
+  const p = PLANTS.find(x=>x.id===id);
+  if(!p) return;
+  if(!confirm(`Sigurado ka bang gusto mong burahin ang "${p.name}"? Hindi na ito mababawi.`)) return;
+  PLANTS = PLANTS.filter(x=>x.id!==id);
+  if(firestoreConnected){
+    try{ await firestoreDB.collection(PLANTS_COLLECTION).doc(String(id)).delete(); }
+    catch(e){ console.error(e); alert('May error sa pagbura sa Firestore: ' + e.message); }
+  }
+  renderAdminList();
+  renderHome();
+  renderLibraryChips();
+  filterLibrary();
+  renderTrainChips();
+  renderTrainList();
+}
+
 function setDBStatus(state){
   const el = document.getElementById('db-status-badge');
   if(!el) return;
@@ -1094,6 +1290,50 @@ function plantVisualHTML(p, size){
 
 /* ================= STATE ================= */
 let currentDetailFrom = 'library';
+
+/* ================= BOOKMARKS (saved plants) =================
+   Stored locally per device via localStorage — this is a personal user
+   preference (not shared data), so it does not need to live in Firestore. */
+const BOOKMARKS_KEY = 'herbalIS_bookmarks';
+let bookmarkedIds = new Set();
+function loadBookmarksFromStorage(){
+  try{
+    const raw = localStorage.getItem(BOOKMARKS_KEY);
+    bookmarkedIds = new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){ bookmarkedIds = new Set(); }
+}
+function saveBookmarksToStorage(){
+  try{ localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...bookmarkedIds])); }catch(e){}
+}
+function isBookmarked(id){ return bookmarkedIds.has(id); }
+function toggleBookmark(id){
+  if(bookmarkedIds.has(id)) bookmarkedIds.delete(id);
+  else bookmarkedIds.add(id);
+  saveBookmarksToStorage();
+  renderHome();
+  filterLibrary();
+}
+function toggleBookmarkCurrent(){
+  if(!lastOpenedPlantId) return;
+  toggleBookmark(lastOpenedPlantId);
+  updateSaveButtonUI(lastOpenedPlantId);
+}
+function updateSaveButtonUI(id){
+  const btn = document.getElementById('detail-save-btn');
+  if(!btn) return;
+  if(isBookmarked(id)) btn.classList.add('saved');
+  else btn.classList.remove('saved');
+}
+function renderSavedSection(){
+  const wrap = document.getElementById('home-saved-section');
+  const carousel = document.getElementById('home-saved-carousel');
+  if(!wrap || !carousel) return;
+  const saved = PLANTS.filter(p=>bookmarkedIds.has(p.id));
+  if(saved.length===0){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  carousel.innerHTML = saved.map(p=>specCard(p)).join('');
+}
+
 let stream = null;
 let capturedDataUrl = null;
 let lastMatchedPlant = null;
@@ -1108,50 +1348,6 @@ let trainingData = {};      // { plantId: [ {vector:[...], thumb:"data:..."} , .
 let trainActiveCat = 'All';
 let trainTargetPlantId = null;
 
-/* ---- Bundled sample photos (thesis dataset), used to auto-train the AI on first ----
-   run so the scanner works out-of-the-box instead of staying in Demo Mode. Paths are
-   relative to index.html (see /training-samples/<plantId>-<slug>/1.jpg ... 5.jpg). */
-const BUNDLED_SAMPLES = {
-  1: ["training-samples/1-lagundi/1.jpg","training-samples/1-lagundi/2.jpg","training-samples/1-lagundi/3.jpg","training-samples/1-lagundi/4.jpg","training-samples/1-lagundi/5.jpg","training-samples/1-lagundi/6.jpg","training-samples/1-lagundi/7.jpg","training-samples/1-lagundi/8.jpg","training-samples/1-lagundi/9.jpg","training-samples/1-lagundi/10.jpg","training-samples/1-lagundi/11.jpg","training-samples/1-lagundi/12.jpg","training-samples/1-lagundi/13.jpg","training-samples/1-lagundi/14.jpg","training-samples/1-lagundi/15.jpg","training-samples/1-lagundi/16.jpg","training-samples/1-lagundi/17.jpg","training-samples/1-lagundi/18.jpg","training-samples/1-lagundi/19.jpg","training-samples/1-lagundi/20.jpg"],
-  2: ["training-samples/2-sambong/1.jpg","training-samples/2-sambong/2.jpg","training-samples/2-sambong/3.jpg","training-samples/2-sambong/4.jpg","training-samples/2-sambong/5.jpg","training-samples/2-sambong/6.jpg","training-samples/2-sambong/7.jpg","training-samples/2-sambong/8.jpg","training-samples/2-sambong/9.jpg","training-samples/2-sambong/10.jpg","training-samples/2-sambong/11.jpg","training-samples/2-sambong/12.jpg","training-samples/2-sambong/13.jpg","training-samples/2-sambong/14.jpg","training-samples/2-sambong/15.jpg","training-samples/2-sambong/16.jpg","training-samples/2-sambong/17.jpg","training-samples/2-sambong/18.jpg","training-samples/2-sambong/19.jpg","training-samples/2-sambong/20.jpg"],
-  3: ["training-samples/3-ampalaya/1.jpg","training-samples/3-ampalaya/2.jpg","training-samples/3-ampalaya/3.jpg","training-samples/3-ampalaya/4.jpg","training-samples/3-ampalaya/5.jpg","training-samples/3-ampalaya/6.jpg","training-samples/3-ampalaya/7.jpg","training-samples/3-ampalaya/8.jpg","training-samples/3-ampalaya/9.jpg","training-samples/3-ampalaya/10.jpg","training-samples/3-ampalaya/11.jpg","training-samples/3-ampalaya/12.jpg","training-samples/3-ampalaya/13.jpg","training-samples/3-ampalaya/14.jpg","training-samples/3-ampalaya/15.jpg","training-samples/3-ampalaya/16.jpg","training-samples/3-ampalaya/17.jpg","training-samples/3-ampalaya/18.jpg","training-samples/3-ampalaya/19.jpg","training-samples/3-ampalaya/20.jpg"],
-  4: ["training-samples/4-bayabas/1.jpg","training-samples/4-bayabas/2.jpg","training-samples/4-bayabas/3.jpg","training-samples/4-bayabas/4.jpg","training-samples/4-bayabas/5.jpg","training-samples/4-bayabas/6.jpg","training-samples/4-bayabas/7.jpg","training-samples/4-bayabas/8.jpg","training-samples/4-bayabas/9.jpg","training-samples/4-bayabas/10.jpg","training-samples/4-bayabas/11.jpg","training-samples/4-bayabas/12.jpg","training-samples/4-bayabas/13.jpg","training-samples/4-bayabas/14.jpg","training-samples/4-bayabas/15.jpg","training-samples/4-bayabas/16.jpg","training-samples/4-bayabas/17.jpg","training-samples/4-bayabas/18.jpg","training-samples/4-bayabas/19.jpg","training-samples/4-bayabas/20.jpg"],
-  5: ["training-samples/5-akapulko/1.jpg","training-samples/5-akapulko/2.jpg","training-samples/5-akapulko/3.jpg","training-samples/5-akapulko/4.jpg","training-samples/5-akapulko/5.jpg","training-samples/5-akapulko/6.jpg","training-samples/5-akapulko/7.jpg","training-samples/5-akapulko/8.jpg","training-samples/5-akapulko/9.jpg","training-samples/5-akapulko/10.jpg","training-samples/5-akapulko/11.jpg","training-samples/5-akapulko/12.jpg","training-samples/5-akapulko/13.jpg","training-samples/5-akapulko/14.jpg","training-samples/5-akapulko/15.jpg","training-samples/5-akapulko/16.jpg","training-samples/5-akapulko/17.jpg","training-samples/5-akapulko/18.jpg","training-samples/5-akapulko/19.jpg","training-samples/5-akapulko/20.jpg"],
-  6: ["training-samples/6-bawang/1.jpg","training-samples/6-bawang/2.jpg","training-samples/6-bawang/3.jpg","training-samples/6-bawang/4.jpg","training-samples/6-bawang/5.jpg","training-samples/6-bawang/6.jpg","training-samples/6-bawang/7.jpg","training-samples/6-bawang/8.jpg","training-samples/6-bawang/9.jpg","training-samples/6-bawang/10.jpg","training-samples/6-bawang/11.jpg","training-samples/6-bawang/12.jpg","training-samples/6-bawang/13.jpg","training-samples/6-bawang/14.jpg","training-samples/6-bawang/15.jpg","training-samples/6-bawang/16.jpg","training-samples/6-bawang/17.jpg","training-samples/6-bawang/18.jpg","training-samples/6-bawang/19.jpg","training-samples/6-bawang/20.jpg"],
-  7: ["training-samples/7-niyog-niyogan/1.jpg","training-samples/7-niyog-niyogan/2.jpg","training-samples/7-niyog-niyogan/3.jpg","training-samples/7-niyog-niyogan/4.jpg","training-samples/7-niyog-niyogan/5.jpg","training-samples/7-niyog-niyogan/6.jpg","training-samples/7-niyog-niyogan/7.jpg","training-samples/7-niyog-niyogan/8.jpg","training-samples/7-niyog-niyogan/9.jpg","training-samples/7-niyog-niyogan/10.jpg","training-samples/7-niyog-niyogan/11.jpg","training-samples/7-niyog-niyogan/12.jpg","training-samples/7-niyog-niyogan/13.jpg","training-samples/7-niyog-niyogan/14.jpg","training-samples/7-niyog-niyogan/15.jpg","training-samples/7-niyog-niyogan/16.jpg","training-samples/7-niyog-niyogan/17.jpg","training-samples/7-niyog-niyogan/18.jpg","training-samples/7-niyog-niyogan/19.jpg","training-samples/7-niyog-niyogan/20.jpg"],
-  8: ["training-samples/8-tsaang-gubat/1.jpg","training-samples/8-tsaang-gubat/2.jpg","training-samples/8-tsaang-gubat/3.jpg","training-samples/8-tsaang-gubat/4.jpg","training-samples/8-tsaang-gubat/5.jpg","training-samples/8-tsaang-gubat/6.jpg","training-samples/8-tsaang-gubat/7.jpg","training-samples/8-tsaang-gubat/8.jpg","training-samples/8-tsaang-gubat/9.jpg","training-samples/8-tsaang-gubat/10.jpg","training-samples/8-tsaang-gubat/11.jpg","training-samples/8-tsaang-gubat/12.jpg","training-samples/8-tsaang-gubat/13.jpg","training-samples/8-tsaang-gubat/14.jpg","training-samples/8-tsaang-gubat/15.jpg","training-samples/8-tsaang-gubat/16.jpg","training-samples/8-tsaang-gubat/17.jpg","training-samples/8-tsaang-gubat/18.jpg","training-samples/8-tsaang-gubat/19.jpg","training-samples/8-tsaang-gubat/20.jpg"],
-  9: ["training-samples/9-ulasimang-bato/1.jpg","training-samples/9-ulasimang-bato/2.jpg","training-samples/9-ulasimang-bato/3.jpg","training-samples/9-ulasimang-bato/4.jpg","training-samples/9-ulasimang-bato/5.jpg","training-samples/9-ulasimang-bato/6.jpg","training-samples/9-ulasimang-bato/7.jpg","training-samples/9-ulasimang-bato/8.jpg","training-samples/9-ulasimang-bato/9.jpg","training-samples/9-ulasimang-bato/10.jpg","training-samples/9-ulasimang-bato/11.jpg","training-samples/9-ulasimang-bato/12.jpg","training-samples/9-ulasimang-bato/13.jpg","training-samples/9-ulasimang-bato/14.jpg","training-samples/9-ulasimang-bato/15.jpg","training-samples/9-ulasimang-bato/16.jpg","training-samples/9-ulasimang-bato/17.jpg","training-samples/9-ulasimang-bato/18.jpg","training-samples/9-ulasimang-bato/19.jpg","training-samples/9-ulasimang-bato/20.jpg"],
-  10: ["training-samples/10-yerba-buena/1.jpg","training-samples/10-yerba-buena/2.jpg","training-samples/10-yerba-buena/3.jpg","training-samples/10-yerba-buena/4.jpg","training-samples/10-yerba-buena/5.jpg","training-samples/10-yerba-buena/6.jpg","training-samples/10-yerba-buena/7.jpg","training-samples/10-yerba-buena/8.jpg","training-samples/10-yerba-buena/9.jpg","training-samples/10-yerba-buena/10.jpg","training-samples/10-yerba-buena/11.jpg","training-samples/10-yerba-buena/12.jpg","training-samples/10-yerba-buena/13.jpg","training-samples/10-yerba-buena/14.jpg","training-samples/10-yerba-buena/15.jpg","training-samples/10-yerba-buena/16.jpg","training-samples/10-yerba-buena/17.jpg","training-samples/10-yerba-buena/18.jpg","training-samples/10-yerba-buena/19.jpg","training-samples/10-yerba-buena/20.jpg"],
-  11: ["training-samples/11-malunggay/1.jpg","training-samples/11-malunggay/2.jpg","training-samples/11-malunggay/3.jpg","training-samples/11-malunggay/4.jpg","training-samples/11-malunggay/5.jpg","training-samples/11-malunggay/6.jpg","training-samples/11-malunggay/7.jpg","training-samples/11-malunggay/8.jpg","training-samples/11-malunggay/9.jpg","training-samples/11-malunggay/10.jpg","training-samples/11-malunggay/11.jpg","training-samples/11-malunggay/12.jpg","training-samples/11-malunggay/13.jpg","training-samples/11-malunggay/14.jpg","training-samples/11-malunggay/15.jpg","training-samples/11-malunggay/16.jpg","training-samples/11-malunggay/17.jpg","training-samples/11-malunggay/18.jpg","training-samples/11-malunggay/19.jpg","training-samples/11-malunggay/20.jpg"],
-  12: ["training-samples/12-luya/1.jpg","training-samples/12-luya/2.jpg","training-samples/12-luya/3.jpg","training-samples/12-luya/4.jpg","training-samples/12-luya/5.jpg","training-samples/12-luya/6.jpg","training-samples/12-luya/7.jpg","training-samples/12-luya/8.jpg","training-samples/12-luya/9.jpg","training-samples/12-luya/10.jpg","training-samples/12-luya/11.jpg","training-samples/12-luya/12.jpg","training-samples/12-luya/13.jpg","training-samples/12-luya/14.jpg","training-samples/12-luya/15.jpg","training-samples/12-luya/16.jpg","training-samples/12-luya/17.jpg","training-samples/12-luya/18.jpg","training-samples/12-luya/19.jpg","training-samples/12-luya/20.jpg"],
-  13: ["training-samples/13-banaba/1.jpg","training-samples/13-banaba/2.jpg","training-samples/13-banaba/3.jpg","training-samples/13-banaba/4.jpg","training-samples/13-banaba/5.jpg","training-samples/13-banaba/6.jpg","training-samples/13-banaba/7.jpg","training-samples/13-banaba/8.jpg","training-samples/13-banaba/9.jpg","training-samples/13-banaba/10.jpg","training-samples/13-banaba/11.jpg","training-samples/13-banaba/12.jpg","training-samples/13-banaba/13.jpg","training-samples/13-banaba/14.jpg","training-samples/13-banaba/15.jpg","training-samples/13-banaba/16.jpg","training-samples/13-banaba/17.jpg","training-samples/13-banaba/18.jpg","training-samples/13-banaba/19.jpg","training-samples/13-banaba/20.jpg"],
-  14: ["training-samples/14-oregano/1.jpg","training-samples/14-oregano/2.jpg","training-samples/14-oregano/3.jpg","training-samples/14-oregano/4.jpg","training-samples/14-oregano/5.jpg","training-samples/14-oregano/6.jpg","training-samples/14-oregano/7.jpg","training-samples/14-oregano/8.jpg","training-samples/14-oregano/9.jpg","training-samples/14-oregano/10.jpg","training-samples/14-oregano/11.jpg","training-samples/14-oregano/12.jpg","training-samples/14-oregano/13.jpg","training-samples/14-oregano/14.jpg","training-samples/14-oregano/15.jpg","training-samples/14-oregano/16.jpg","training-samples/14-oregano/17.jpg","training-samples/14-oregano/18.jpg","training-samples/14-oregano/19.jpg","training-samples/14-oregano/20.jpg"],
-  15: ["training-samples/15-sabila/1.jpg","training-samples/15-sabila/2.jpg","training-samples/15-sabila/3.jpg","training-samples/15-sabila/4.jpg","training-samples/15-sabila/5.jpg","training-samples/15-sabila/6.jpg","training-samples/15-sabila/7.jpg","training-samples/15-sabila/8.jpg","training-samples/15-sabila/9.jpg","training-samples/15-sabila/10.jpg","training-samples/15-sabila/11.jpg","training-samples/15-sabila/12.jpg","training-samples/15-sabila/13.jpg","training-samples/15-sabila/14.jpg","training-samples/15-sabila/15.jpg","training-samples/15-sabila/16.jpg","training-samples/15-sabila/17.jpg","training-samples/15-sabila/18.jpg","training-samples/15-sabila/19.jpg","training-samples/15-sabila/20.jpg"],
-  16: ["training-samples/16-mayana/1.jpg","training-samples/16-mayana/2.jpg","training-samples/16-mayana/3.jpg","training-samples/16-mayana/4.jpg","training-samples/16-mayana/5.jpg","training-samples/16-mayana/6.jpg","training-samples/16-mayana/7.jpg","training-samples/16-mayana/8.jpg","training-samples/16-mayana/9.jpg","training-samples/16-mayana/10.jpg","training-samples/16-mayana/11.jpg","training-samples/16-mayana/12.jpg","training-samples/16-mayana/13.jpg","training-samples/16-mayana/14.jpg","training-samples/16-mayana/15.jpg","training-samples/16-mayana/16.jpg","training-samples/16-mayana/17.jpg","training-samples/16-mayana/18.jpg","training-samples/16-mayana/19.jpg","training-samples/16-mayana/20.jpg"],
-  17: ["training-samples/17-damong-maria/1.jpg","training-samples/17-damong-maria/2.jpg","training-samples/17-damong-maria/3.jpg","training-samples/17-damong-maria/4.jpg","training-samples/17-damong-maria/5.jpg","training-samples/17-damong-maria/6.jpg","training-samples/17-damong-maria/7.jpg","training-samples/17-damong-maria/8.jpg","training-samples/17-damong-maria/9.jpg","training-samples/17-damong-maria/10.jpg","training-samples/17-damong-maria/11.jpg","training-samples/17-damong-maria/12.jpg","training-samples/17-damong-maria/13.jpg","training-samples/17-damong-maria/14.jpg","training-samples/17-damong-maria/15.jpg","training-samples/17-damong-maria/16.jpg","training-samples/17-damong-maria/17.jpg","training-samples/17-damong-maria/18.jpg","training-samples/17-damong-maria/19.jpg","training-samples/17-damong-maria/20.jpg"],
-  18: ["training-samples/18-makabuhay/1.jpg","training-samples/18-makabuhay/2.jpg","training-samples/18-makabuhay/3.jpg","training-samples/18-makabuhay/4.jpg","training-samples/18-makabuhay/5.jpg","training-samples/18-makabuhay/6.jpg","training-samples/18-makabuhay/7.jpg","training-samples/18-makabuhay/8.jpg","training-samples/18-makabuhay/9.jpg","training-samples/18-makabuhay/10.jpg","training-samples/18-makabuhay/11.jpg","training-samples/18-makabuhay/12.jpg","training-samples/18-makabuhay/13.jpg","training-samples/18-makabuhay/14.jpg","training-samples/18-makabuhay/15.jpg","training-samples/18-makabuhay/16.jpg","training-samples/18-makabuhay/17.jpg","training-samples/18-makabuhay/18.jpg","training-samples/18-makabuhay/19.jpg","training-samples/18-makabuhay/20.jpg"],
-  19: ["training-samples/19-pandan/1.jpg","training-samples/19-pandan/2.jpg","training-samples/19-pandan/3.jpg","training-samples/19-pandan/4.jpg","training-samples/19-pandan/5.jpg","training-samples/19-pandan/6.jpg","training-samples/19-pandan/7.jpg","training-samples/19-pandan/8.jpg","training-samples/19-pandan/9.jpg","training-samples/19-pandan/10.jpg","training-samples/19-pandan/11.jpg","training-samples/19-pandan/12.jpg","training-samples/19-pandan/13.jpg","training-samples/19-pandan/14.jpg","training-samples/19-pandan/15.jpg","training-samples/19-pandan/16.jpg","training-samples/19-pandan/17.jpg","training-samples/19-pandan/18.jpg","training-samples/19-pandan/19.jpg","training-samples/19-pandan/20.jpg"],
-  20: ["training-samples/20-gumamela/1.jpg","training-samples/20-gumamela/2.jpg","training-samples/20-gumamela/3.jpg","training-samples/20-gumamela/4.jpg","training-samples/20-gumamela/5.jpg","training-samples/20-gumamela/6.jpg","training-samples/20-gumamela/7.jpg","training-samples/20-gumamela/8.jpg","training-samples/20-gumamela/9.jpg","training-samples/20-gumamela/10.jpg","training-samples/20-gumamela/11.jpg","training-samples/20-gumamela/12.jpg","training-samples/20-gumamela/13.jpg","training-samples/20-gumamela/14.jpg","training-samples/20-gumamela/15.jpg","training-samples/20-gumamela/16.jpg","training-samples/20-gumamela/17.jpg","training-samples/20-gumamela/18.jpg","training-samples/20-gumamela/19.jpg","training-samples/20-gumamela/20.jpg"],
-  21: ["training-samples/21-papaya/1.jpg","training-samples/21-papaya/2.jpg","training-samples/21-papaya/3.jpg","training-samples/21-papaya/4.jpg","training-samples/21-papaya/5.jpg","training-samples/21-papaya/6.jpg","training-samples/21-papaya/7.jpg","training-samples/21-papaya/8.jpg","training-samples/21-papaya/9.jpg","training-samples/21-papaya/10.jpg","training-samples/21-papaya/11.jpg","training-samples/21-papaya/12.jpg","training-samples/21-papaya/13.jpg","training-samples/21-papaya/14.jpg","training-samples/21-papaya/15.jpg","training-samples/21-papaya/16.jpg","training-samples/21-papaya/17.jpg","training-samples/21-papaya/18.jpg","training-samples/21-papaya/19.jpg","training-samples/21-papaya/20.jpg"],
-  22: ["training-samples/22-guyabano/1.jpg","training-samples/22-guyabano/2.jpg","training-samples/22-guyabano/3.jpg","training-samples/22-guyabano/4.jpg","training-samples/22-guyabano/5.jpg","training-samples/22-guyabano/6.jpg","training-samples/22-guyabano/7.jpg","training-samples/22-guyabano/8.jpg","training-samples/22-guyabano/9.jpg","training-samples/22-guyabano/10.jpg","training-samples/22-guyabano/11.jpg","training-samples/22-guyabano/12.jpg","training-samples/22-guyabano/13.jpg","training-samples/22-guyabano/14.jpg","training-samples/22-guyabano/15.jpg","training-samples/22-guyabano/16.jpg","training-samples/22-guyabano/17.jpg","training-samples/22-guyabano/18.jpg","training-samples/22-guyabano/19.jpg","training-samples/22-guyabano/20.jpg"],
-  23: ["training-samples/23-avocado/1.jpg","training-samples/23-avocado/2.jpg","training-samples/23-avocado/3.jpg","training-samples/23-avocado/4.jpg","training-samples/23-avocado/5.jpg","training-samples/23-avocado/6.jpg","training-samples/23-avocado/7.jpg","training-samples/23-avocado/8.jpg","training-samples/23-avocado/9.jpg","training-samples/23-avocado/10.jpg","training-samples/23-avocado/11.jpg","training-samples/23-avocado/12.jpg","training-samples/23-avocado/13.jpg","training-samples/23-avocado/14.jpg","training-samples/23-avocado/15.jpg","training-samples/23-avocado/16.jpg","training-samples/23-avocado/17.jpg","training-samples/23-avocado/18.jpg","training-samples/23-avocado/19.jpg","training-samples/23-avocado/20.jpg"],
-  24: ["training-samples/24-kalamansi/1.jpg","training-samples/24-kalamansi/2.jpg","training-samples/24-kalamansi/3.jpg","training-samples/24-kalamansi/4.jpg","training-samples/24-kalamansi/5.jpg","training-samples/24-kalamansi/6.jpg","training-samples/24-kalamansi/7.jpg","training-samples/24-kalamansi/8.jpg","training-samples/24-kalamansi/9.jpg","training-samples/24-kalamansi/10.jpg","training-samples/24-kalamansi/11.jpg","training-samples/24-kalamansi/12.jpg","training-samples/24-kalamansi/13.jpg","training-samples/24-kalamansi/14.jpg","training-samples/24-kalamansi/15.jpg","training-samples/24-kalamansi/16.jpg","training-samples/24-kalamansi/17.jpg","training-samples/24-kalamansi/18.jpg","training-samples/24-kalamansi/19.jpg","training-samples/24-kalamansi/20.jpg"],
-  25: ["training-samples/25-ikmo/1.jpg","training-samples/25-ikmo/2.jpg","training-samples/25-ikmo/3.jpg","training-samples/25-ikmo/4.jpg","training-samples/25-ikmo/5.jpg","training-samples/25-ikmo/6.jpg","training-samples/25-ikmo/7.jpg","training-samples/25-ikmo/8.jpg","training-samples/25-ikmo/9.jpg","training-samples/25-ikmo/10.jpg","training-samples/25-ikmo/11.jpg","training-samples/25-ikmo/12.jpg","training-samples/25-ikmo/13.jpg","training-samples/25-ikmo/14.jpg","training-samples/25-ikmo/15.jpg","training-samples/25-ikmo/16.jpg","training-samples/25-ikmo/17.jpg","training-samples/25-ikmo/18.jpg","training-samples/25-ikmo/19.jpg","training-samples/25-ikmo/20.jpg"],
-  26: ["training-samples/26-kamias/1.jpg","training-samples/26-kamias/2.jpg","training-samples/26-kamias/3.jpg","training-samples/26-kamias/4.jpg","training-samples/26-kamias/5.jpg","training-samples/26-kamias/6.jpg","training-samples/26-kamias/7.jpg","training-samples/26-kamias/8.jpg","training-samples/26-kamias/9.jpg","training-samples/26-kamias/10.jpg","training-samples/26-kamias/11.jpg","training-samples/26-kamias/12.jpg","training-samples/26-kamias/13.jpg","training-samples/26-kamias/14.jpg","training-samples/26-kamias/15.jpg","training-samples/26-kamias/16.jpg","training-samples/26-kamias/17.jpg","training-samples/26-kamias/18.jpg","training-samples/26-kamias/19.jpg","training-samples/26-kamias/20.jpg"],
-  27: ["training-samples/27-balanoy/1.jpg","training-samples/27-balanoy/2.jpg","training-samples/27-balanoy/3.jpg","training-samples/27-balanoy/4.jpg","training-samples/27-balanoy/5.jpg","training-samples/27-balanoy/6.jpg","training-samples/27-balanoy/7.jpg","training-samples/27-balanoy/8.jpg","training-samples/27-balanoy/9.jpg","training-samples/27-balanoy/10.jpg","training-samples/27-balanoy/11.jpg","training-samples/27-balanoy/12.jpg","training-samples/27-balanoy/13.jpg","training-samples/27-balanoy/14.jpg","training-samples/27-balanoy/15.jpg","training-samples/27-balanoy/16.jpg","training-samples/27-balanoy/17.jpg","training-samples/27-balanoy/18.jpg","training-samples/27-balanoy/19.jpg","training-samples/27-balanoy/20.jpg"],
-  28: ["training-samples/28-kataka-taka/1.jpg","training-samples/28-kataka-taka/2.jpg","training-samples/28-kataka-taka/3.jpg","training-samples/28-kataka-taka/4.jpg","training-samples/28-kataka-taka/5.jpg","training-samples/28-kataka-taka/6.jpg","training-samples/28-kataka-taka/7.jpg","training-samples/28-kataka-taka/8.jpg","training-samples/28-kataka-taka/9.jpg","training-samples/28-kataka-taka/10.jpg","training-samples/28-kataka-taka/11.jpg","training-samples/28-kataka-taka/12.jpg","training-samples/28-kataka-taka/13.jpg","training-samples/28-kataka-taka/14.jpg","training-samples/28-kataka-taka/15.jpg","training-samples/28-kataka-taka/16.jpg","training-samples/28-kataka-taka/17.jpg","training-samples/28-kataka-taka/18.jpg","training-samples/28-kataka-taka/19.jpg","training-samples/28-kataka-taka/20.jpg"],
-  29: ["training-samples/29-kamote-tops/1.jpg","training-samples/29-kamote-tops/2.jpg","training-samples/29-kamote-tops/3.jpg","training-samples/29-kamote-tops/4.jpg","training-samples/29-kamote-tops/5.jpg","training-samples/29-kamote-tops/6.jpg","training-samples/29-kamote-tops/7.jpg","training-samples/29-kamote-tops/8.jpg","training-samples/29-kamote-tops/9.jpg","training-samples/29-kamote-tops/10.jpg","training-samples/29-kamote-tops/11.jpg","training-samples/29-kamote-tops/12.jpg","training-samples/29-kamote-tops/13.jpg","training-samples/29-kamote-tops/14.jpg","training-samples/29-kamote-tops/15.jpg","training-samples/29-kamote-tops/16.jpg","training-samples/29-kamote-tops/17.jpg","training-samples/29-kamote-tops/18.jpg","training-samples/29-kamote-tops/19.jpg","training-samples/29-kamote-tops/20.jpg"],
-  30: ["training-samples/30-sibuyas/1.jpg","training-samples/30-sibuyas/2.jpg","training-samples/30-sibuyas/3.jpg","training-samples/30-sibuyas/4.jpg","training-samples/30-sibuyas/5.jpg","training-samples/30-sibuyas/6.jpg","training-samples/30-sibuyas/7.jpg","training-samples/30-sibuyas/8.jpg","training-samples/30-sibuyas/9.jpg","training-samples/30-sibuyas/10.jpg","training-samples/30-sibuyas/11.jpg","training-samples/30-sibuyas/12.jpg","training-samples/30-sibuyas/13.jpg","training-samples/30-sibuyas/14.jpg","training-samples/30-sibuyas/15.jpg","training-samples/30-sibuyas/16.jpg","training-samples/30-sibuyas/17.jpg","training-samples/30-sibuyas/18.jpg","training-samples/30-sibuyas/19.jpg","training-samples/30-sibuyas/20.jpg"],
-  31: ["training-samples/31-alagaw/1.jpg","training-samples/31-alagaw/2.jpg","training-samples/31-alagaw/3.jpg","training-samples/31-alagaw/4.jpg","training-samples/31-alagaw/5.jpg","training-samples/31-alagaw/6.jpg","training-samples/31-alagaw/7.jpg","training-samples/31-alagaw/8.jpg","training-samples/31-alagaw/9.jpg","training-samples/31-alagaw/10.jpg","training-samples/31-alagaw/11.jpg","training-samples/31-alagaw/12.jpg","training-samples/31-alagaw/13.jpg","training-samples/31-alagaw/14.jpg","training-samples/31-alagaw/15.jpg","training-samples/31-alagaw/16.jpg","training-samples/31-alagaw/17.jpg","training-samples/31-alagaw/18.jpg","training-samples/31-alagaw/19.jpg","training-samples/31-alagaw/20.jpg"],
-  32: ["training-samples/32-bignay/1.jpg","training-samples/32-bignay/2.jpg","training-samples/32-bignay/3.jpg","training-samples/32-bignay/4.jpg","training-samples/32-bignay/5.jpg","training-samples/32-bignay/6.jpg","training-samples/32-bignay/7.jpg","training-samples/32-bignay/8.jpg","training-samples/32-bignay/9.jpg","training-samples/32-bignay/10.jpg","training-samples/32-bignay/11.jpg","training-samples/32-bignay/12.jpg","training-samples/32-bignay/13.jpg","training-samples/32-bignay/14.jpg","training-samples/32-bignay/15.jpg","training-samples/32-bignay/16.jpg","training-samples/32-bignay/17.jpg","training-samples/32-bignay/18.jpg","training-samples/32-bignay/19.jpg","training-samples/32-bignay/20.jpg"],
-  33: ["training-samples/33-duhat/1.jpg","training-samples/33-duhat/2.jpg","training-samples/33-duhat/3.jpg","training-samples/33-duhat/4.jpg","training-samples/33-duhat/5.jpg","training-samples/33-duhat/6.jpg","training-samples/33-duhat/7.jpg","training-samples/33-duhat/8.jpg","training-samples/33-duhat/9.jpg","training-samples/33-duhat/10.jpg","training-samples/33-duhat/11.jpg","training-samples/33-duhat/12.jpg","training-samples/33-duhat/13.jpg","training-samples/33-duhat/14.jpg","training-samples/33-duhat/15.jpg","training-samples/33-duhat/16.jpg","training-samples/33-duhat/17.jpg","training-samples/33-duhat/18.jpg","training-samples/33-duhat/19.jpg","training-samples/33-duhat/20.jpg"],
-  34: ["training-samples/34-wansoy/1.jpg","training-samples/34-wansoy/2.jpg","training-samples/34-wansoy/3.jpg","training-samples/34-wansoy/4.jpg","training-samples/34-wansoy/5.jpg","training-samples/34-wansoy/6.jpg","training-samples/34-wansoy/7.jpg","training-samples/34-wansoy/8.jpg","training-samples/34-wansoy/9.jpg","training-samples/34-wansoy/10.jpg","training-samples/34-wansoy/11.jpg","training-samples/34-wansoy/12.jpg","training-samples/34-wansoy/13.jpg","training-samples/34-wansoy/14.jpg","training-samples/34-wansoy/15.jpg","training-samples/34-wansoy/16.jpg","training-samples/34-wansoy/17.jpg","training-samples/34-wansoy/18.jpg","training-samples/34-wansoy/19.jpg","training-samples/34-wansoy/20.jpg"],
-  35: ["training-samples/35-sampalok/1.jpg","training-samples/35-sampalok/2.jpg","training-samples/35-sampalok/3.jpg","training-samples/35-sampalok/4.jpg","training-samples/35-sampalok/5.jpg","training-samples/35-sampalok/6.jpg","training-samples/35-sampalok/7.jpg","training-samples/35-sampalok/8.jpg","training-samples/35-sampalok/9.jpg","training-samples/35-sampalok/10.jpg","training-samples/35-sampalok/11.jpg","training-samples/35-sampalok/12.jpg","training-samples/35-sampalok/13.jpg","training-samples/35-sampalok/14.jpg","training-samples/35-sampalok/15.jpg","training-samples/35-sampalok/16.jpg","training-samples/35-sampalok/17.jpg","training-samples/35-sampalok/18.jpg","training-samples/35-sampalok/19.jpg","training-samples/35-sampalok/20.jpg"],
-  36: ["training-samples/36-saluyot/1.jpg","training-samples/36-saluyot/2.jpg","training-samples/36-saluyot/3.jpg","training-samples/36-saluyot/4.jpg","training-samples/36-saluyot/5.jpg","training-samples/36-saluyot/6.jpg","training-samples/36-saluyot/7.jpg","training-samples/36-saluyot/8.jpg","training-samples/36-saluyot/9.jpg","training-samples/36-saluyot/10.jpg","training-samples/36-saluyot/11.jpg","training-samples/36-saluyot/12.jpg","training-samples/36-saluyot/13.jpg","training-samples/36-saluyot/14.jpg","training-samples/36-saluyot/15.jpg","training-samples/36-saluyot/16.jpg","training-samples/36-saluyot/17.jpg","training-samples/36-saluyot/18.jpg","training-samples/36-saluyot/19.jpg","training-samples/36-saluyot/20.jpg"],
-  37: ["training-samples/37-alugbati/1.jpg","training-samples/37-alugbati/2.jpg","training-samples/37-alugbati/3.jpg","training-samples/37-alugbati/4.jpg","training-samples/37-alugbati/5.jpg","training-samples/37-alugbati/6.jpg","training-samples/37-alugbati/7.jpg","training-samples/37-alugbati/8.jpg","training-samples/37-alugbati/9.jpg","training-samples/37-alugbati/10.jpg","training-samples/37-alugbati/11.jpg","training-samples/37-alugbati/12.jpg","training-samples/37-alugbati/13.jpg","training-samples/37-alugbati/14.jpg","training-samples/37-alugbati/15.jpg","training-samples/37-alugbati/16.jpg","training-samples/37-alugbati/17.jpg","training-samples/37-alugbati/18.jpg","training-samples/37-alugbati/19.jpg","training-samples/37-alugbati/20.jpg"],
-  38: ["training-samples/38-kamantigi/1.jpg","training-samples/38-kamantigi/2.jpg","training-samples/38-kamantigi/3.jpg","training-samples/38-kamantigi/4.jpg","training-samples/38-kamantigi/5.jpg","training-samples/38-kamantigi/6.jpg","training-samples/38-kamantigi/7.jpg","training-samples/38-kamantigi/8.jpg","training-samples/38-kamantigi/9.jpg","training-samples/38-kamantigi/10.jpg","training-samples/38-kamantigi/11.jpg","training-samples/38-kamantigi/12.jpg","training-samples/38-kamantigi/13.jpg","training-samples/38-kamantigi/14.jpg","training-samples/38-kamantigi/15.jpg","training-samples/38-kamantigi/16.jpg","training-samples/38-kamantigi/17.jpg","training-samples/38-kamantigi/18.jpg","training-samples/38-kamantigi/19.jpg","training-samples/38-kamantigi/20.jpg"],
-  39: ["training-samples/39-rosal/1.jpg","training-samples/39-rosal/2.jpg","training-samples/39-rosal/3.jpg","training-samples/39-rosal/4.jpg","training-samples/39-rosal/5.jpg","training-samples/39-rosal/6.jpg","training-samples/39-rosal/7.jpg","training-samples/39-rosal/8.jpg","training-samples/39-rosal/9.jpg","training-samples/39-rosal/10.jpg","training-samples/39-rosal/11.jpg","training-samples/39-rosal/12.jpg","training-samples/39-rosal/13.jpg","training-samples/39-rosal/14.jpg","training-samples/39-rosal/15.jpg","training-samples/39-rosal/16.jpg","training-samples/39-rosal/17.jpg","training-samples/39-rosal/18.jpg","training-samples/39-rosal/19.jpg","training-samples/39-rosal/20.jpg"],
-};
 function setAIStatus(state){
   const badge = document.getElementById('ai-status-badge');
   const text = document.getElementById('ai-status-text');
@@ -1177,27 +1373,8 @@ async function loadAIModel(){
 
 function computeEmbeddingFromElement(el){
   if(!mobilenetModel) return null;
-  // Center-crop to a square before inference. MobileNet's internal resize squashes
-  // non-square input to fit its input size, which distorts leaf shape/proportions —
-  // and phone photos (portrait) vs. bundled training photos (whatever aspect they
-  // were shot in) rarely share the same aspect ratio. Cropping both training and
-  // query images the same way here (single shared function, every call site) keeps
-  // them on equal footing instead of comparing a stretched query against
-  // differently-stretched samples.
-  const srcW = el.videoWidth || el.naturalWidth || el.width;
-  const srcH = el.videoHeight || el.naturalHeight || el.height;
-  let cropEl = el;
-  if(srcW && srcH && srcW !== srcH){
-    const side = Math.min(srcW, srcH);
-    const sx = (srcW - side) / 2;
-    const sy = (srcH - side) / 2;
-    const sq = document.createElement('canvas');
-    sq.width = 224; sq.height = 224;
-    sq.getContext('2d').drawImage(el, sx, sy, side, side, 0, 0, 224, 224);
-    cropEl = sq;
-  }
   return tf.tidy(()=>{
-    const t = mobilenetModel.infer(cropEl, true);
+    const t = mobilenetModel.infer(el, true);
     return Array.from(t.dataSync());
   });
 }
@@ -1268,112 +1445,6 @@ async function loadTrainingDataFromDB(){
   filterLibrary();
 }
 
-/* ---- Auto-train from bundled sample photos (BUNDLED_SAMPLES) ----
-   Runs automatically once, after the AI model + any existing IndexedDB/Firestore
-   training data have loaded. For every plant that still has ZERO samples, it feeds
-   the bundled photos through the same MobileNet embedding pipeline used by manual
-   "Train AI" uploads, and stores the results in IndexedDB (and syncs to Firestore
-   if connected) — so the scanner shows real "AI Match" results out-of-the-box
-   instead of "Demo Mode". Plants that already have at least 1 sample (manually
-   trained, or auto-trained on a previous run) are skipped, so this never duplicates
-   or overwrites real training data. */
-let autoTrainRunning = false;
-let autoTrainDoneOnce = false;
-
-function loadImageFromURL(url){
-  return new Promise((resolve,reject)=>{
-    const img = new Image();
-    img.onload = ()=>resolve(img);
-    img.onerror = ()=>reject(new Error('Failed to load '+url));
-    img.src = url;
-  });
-}
-
-function setAutoTrainBanner(visible, text){
-  const el = document.getElementById('auto-train-banner');
-  if(!el) return;
-  el.style.display = visible ? 'flex' : 'none';
-  if(text) document.getElementById('auto-train-banner-text').textContent = text;
-}
-
-function setRetrainButtonState(running, label){
-  const btn = document.getElementById('retrain-btn');
-  if(!btn) return;
-  btn.disabled = running;
-  btn.style.opacity = running ? '0.55' : '1';
-  btn.style.cursor = running ? 'not-allowed' : 'pointer';
-  btn.textContent = label || (running ? '⏳ Tumatakbo pa yung training...' : '⚡ I-retrain gamit ang bundled na sample photos');
-}
-
-// Called by the "I-retrain" button. If training is already running in the
-// background (e.g. the automatic first-run pass), this just tells the user
-// to wait instead of silently doing nothing — avoids the confusing "parang
-// walang nangyari tapos bigla na lang nakumpleto" experience.
-function manualRetrain(){
-  if(autoTrainRunning){
-    alert('Tumatakbo pa yung training sa background — panoorin mo na lang yung progress bar sa itaas, awtomatiko itong matatapos. Hindi na kailangang pindutin ulit.');
-    return;
-  }
-  autoTrainDoneOnce = false;
-  autoTrainFromBundledIfNeeded();
-}
-
-async function autoTrainFromBundledIfNeeded(){
-  if(autoTrainRunning || autoTrainDoneOnce) return;
-  if(typeof BUNDLED_SAMPLES === 'undefined') return;
-  autoTrainRunning = true;
-  setRetrainButtonState(true, '⏳ Naglo-load ng AI model...');
-  try{
-    // Wait for the AI model (up to ~20s), skip quietly if it never loads (offline, etc).
-    let tries = 0;
-    while(!aiReady && !aiLoadFailed && tries < 100){
-      await new Promise(r=>setTimeout(r,200));
-      tries++;
-    }
-    if(!aiReady) return;
-
-    // Give IndexedDB / Firestore a moment to finish loading existing samples first,
-    // so we correctly skip plants that are already trained.
-    setRetrainButtonState(true, '⏳ Kinukuha ang laman ng cloud...');
-    await new Promise(r=>setTimeout(r,1000));
-
-    const missing = PLANTS.filter(p => (!trainingData[p.id] || trainingData[p.id].length===0) && BUNDLED_SAMPLES[p.id] && BUNDLED_SAMPLES[p.id].length);
-    if(missing.length===0) return;
-
-    setAutoTrainBanner(true, `Ina-train ang AI gamit ang sample photos... (0 / ${missing.length})`);
-    setRetrainButtonState(true, `⏳ Ina-train... (0 / ${missing.length})`);
-    let done = 0;
-    for(const p of missing){
-      for(const path of BUNDLED_SAMPLES[p.id]){
-        try{
-          const img = await loadImageFromURL(path);
-          const vector = computeEmbeddingFromElement(img);
-          if(!vector) continue;
-          const tc = document.createElement('canvas');
-          tc.width = 220; tc.height = 220;
-          tc.getContext('2d').drawImage(img,0,0,220,220);
-          const thumb = tc.toDataURL('image/jpeg', 0.7);
-          await dbAddEmbedding(p.id, vector, thumb);
-          syncEmbeddingToFirestore(p.id, vector, thumb);
-          if(!trainingData[p.id]) trainingData[p.id] = [];
-          trainingData[p.id].push({vector, thumb});
-        }catch(e){ console.warn('Auto-train sample failed:', path, e); }
-      }
-      done++;
-      setAutoTrainBanner(true, `Ina-train ang AI gamit ang sample photos... (${done} / ${missing.length})`);
-      setRetrainButtonState(true, `⏳ Ina-train... (${done} / ${missing.length})`);
-      renderTrainList();
-      renderHome();
-      filterLibrary();
-    }
-    setAutoTrainBanner(false);
-  } finally {
-    autoTrainRunning = false;
-    autoTrainDoneOnce = true;
-    setRetrainButtonState(false);
-  }
-}
-
 /* ================= NAV ================= */
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -1395,11 +1466,14 @@ function renderHome(){
   carousel.innerHTML = PLANTS.slice(0,8).map(p=>specCard(p)).join('');
   const carousel2 = document.getElementById('home-carousel2');
   carousel2.innerHTML = PLANTS.slice(8,16).map(p=>specCard(p)).join('');
+  renderSavedSection();
 }
 function goCategory(cat){ showScreen('library'); setTimeout(()=>{ selectChip(cat); },50); }
 
 function specCard(p){
+  const savedBadge = isBookmarked(p.id) ? `<div class="saved-badge"><svg viewBox="0 0 24 24"><path d="M6 4a2 2 0 012-2h8a2 2 0 012 2v17l-6-4-6 4V4z"/></svg></div>` : '';
   return `<div class="spec-card" onclick="openDetail(${p.id},'home')">
+    ${savedBadge}
     <div class="icon-wrap">${plantVisualHTML(p,56)}</div>
     <div class="name">${p.name}</div>
     <div class="sci">${p.sci}</div>
@@ -1409,21 +1483,25 @@ function specCard(p){
 
 /* ================= LIBRARY ================= */
 let activeCat = 'All';
+const SAVED_FILTER = '❤ Naka-save';
 function renderLibraryChips(){
   const el = document.getElementById('lib-chips');
-  el.innerHTML = CATEGORIES.map(c=>`<button class="chip ${c===activeCat?'active':''}" onclick="selectChip('${c}')">${c}</button>`).join('');
+  const cats = [SAVED_FILTER, ...CATEGORIES];
+  el.innerHTML = cats.map(c=>`<button class="chip ${c===activeCat?'active':''}" onclick="selectChip('${c}')">${c}</button>`).join('');
 }
 function selectChip(cat){ activeCat = cat; renderLibraryChips(); filterLibrary(); }
+function showSavedInLibrary(){ showScreen('library'); setTimeout(()=>{ selectChip(SAVED_FILTER); },50); }
 function filterLibrary(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   let list = PLANTS.filter(p=>{
-    const matchesCat = activeCat==='All' || p.cat===activeCat;
+    const matchesCat = activeCat==='All' || (activeCat===SAVED_FILTER ? isBookmarked(p.id) : p.cat===activeCat);
     const matchesQ = !q || p.name.toLowerCase().includes(q) || p.sci.toLowerCase().includes(q) || p.local.join(' ').toLowerCase().includes(q);
     return matchesCat && matchesQ;
   });
   const grid = document.getElementById('library-grid');
   if(list.length===0){
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Walang nahanap na halaman para sa "${q}". Subukan ang ibang keyword.</div>`;
+    const msg = activeCat===SAVED_FILTER ? 'Wala ka pang na-save na halaman. Pumunta sa detalye ng isang halaman at pindutin ang bookmark icon.' : `Walang nahanap na halaman para sa "${q}". Subukan ang ibang keyword.`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${msg}</div>`;
     return;
   }
   grid.innerHTML = list.map(p=>specCard(p)).join('');
@@ -1465,10 +1543,12 @@ function stopListening(){
 }
 
 /* ================= DETAIL ================= */
+let lastOpenedPlantId = null;
 function openDetail(id, from){
   const p = PLANTS.find(x=>x.id===id);
   if(!p) return;
   currentDetailFrom = from || 'library';
+  lastOpenedPlantId = id;
   document.getElementById('detail-icon').innerHTML = plantVisualHTML(p,110);
   document.getElementById('detail-name').textContent = p.name;
   document.getElementById('detail-sci').textContent = p.sci;
@@ -1480,6 +1560,7 @@ function openDetail(id, from){
   document.getElementById('detail-benefits').innerHTML = p.benefits.map(b=>`<li>${b}</li>`).join('');
   document.getElementById('detail-prep').textContent = p.prep;
   document.getElementById('detail-caution').innerHTML = `<strong>Paalala:</strong> ${p.caution}`;
+  updateSaveButtonUI(id);
   showScreen('detail');
 }
 
@@ -1572,8 +1653,6 @@ async function resetTrainingData(){
       await batch.commit();
     }catch(e){ console.warn('Could not clear cloud training samples:', e); }
   }
-  autoTrainDoneOnce = false;
-  autoTrainFromBundledIfNeeded();
 }
 
 /* ================= SCAN / CAMERA ================= */
@@ -1685,13 +1764,10 @@ function matchWithAI(canvas){
     const perPlantScore = {};
     Object.keys(trainingData).forEach(plantId=>{
       const samples = trainingData[plantId];
-      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector)).sort((a,b)=>b-a);
-      // Average over the best-matching few samples per class (top-K) instead of all
-      // of them — with 20 bundled samples per plant, a handful of blurry/odd-angle
-      // photos shouldn't drag down an otherwise strong match.
-      const k = Math.min(5, sims.length);
-      const topK = sims.slice(0, k);
-      const avg = topK.reduce((a,b)=>a+b,0) / topK.length;
+      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector));
+      // Average similarity across all trained samples for this plant — more stable
+      // than relying on a single nearest neighbor when sample counts are small.
+      const avg = sims.reduce((a,b)=>a+b,0) / sims.length;
       perPlantScore[plantId] = avg;
     });
     const ranked = Object.keys(perPlantScore)
@@ -1700,25 +1776,17 @@ function matchWithAI(canvas){
       .sort((a,b)=>b.sim-a.sim);
     if(ranked.length===0) return null;
     const top = ranked[0];
+    // No artificial floor here — a genuinely weak match should show a low
+    // percentage rather than being dressed up, so the person can tell when
+    // more training samples are needed for that plant.
+    const confidence = Math.round(Math.max(0, Math.min(99, top.sim*100)));
+    const alts = ranked.slice(1,4).map(r=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, r.sim*100)))}));
     // "Low confidence" means the identification is genuinely uncertain — either the
     // top match barely beats the runner-up (ambiguous) or the raw similarity is very
-    // weak overall. This stays keyed off the raw cosine similarity/margin, unaffected
-    // by the display calibration below, so it keeps flagging genuinely uncertain matches.
+    // weak overall. A clear, well-separated top match shouldn't be flagged just
+    // because the raw cosine-similarity number happens to be a modest percentage.
     const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
     const lowConfidence = top.sim < 0.35 || margin < 0.06;
-    // Raw MobileNet cosine similarity between same-domain photos (leaves vs. leaves)
-    // sits in a compressed band — even a clearly-correct top match often only scores
-    // ~0.5-0.6 raw, with the runner-up not far behind, so showing that raw number as
-    // "confidence" reads as low even when the classification itself is solid. Instead,
-    // convert the ranked similarities into a relative (softmax-style) confidence: a
-    // clear winner is pushed toward a high, readable percentage, while a genuinely
-    // ambiguous top match (small margin over the runner-up) still stays modest — same
-    // underlying signal as the low-confidence flag above, just on a readable scale.
-    const T = 0.08; // temperature — lower = more separation between top and runner-up
-    const expScores = ranked.map(r => Math.exp(r.sim / T));
-    const sumExp = expScores.reduce((a,b)=>a+b, 0);
-    const confidence = Math.round(Math.max(1, Math.min(99, (expScores[0] / sumExp) * 100)));
-    const alts = ranked.slice(1,4).map((r,i)=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, (expScores[i+1]/sumExp)*100)))}));
     return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
   }catch(e){
     console.warn('AI match error, falling back to demo mode:', e);
@@ -1805,6 +1873,7 @@ function updateClock(){
 }
 updateClock(); setInterval(updateClock,30000);
 
+loadBookmarksFromStorage();
 renderHome();
 renderLibraryChips();
 filterLibrary();
@@ -1819,7 +1888,6 @@ if(!isFirebaseConfigured()){
 // the local IndexedDB cache, once from its synced Firestore copy).
 loadAIModel();
 initFirebase();
-autoTrainFromBundledIfNeeded();
 
 /* ================= PWA: service worker + install prompt ================= */
 if ('serviceWorker' in navigator) {
@@ -1832,50 +1900,39 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.style.display = 'inline-flex';
 });
+function installApp(){
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(() => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-app-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
 window.addEventListener('appinstalled', () => {
   const btn = document.getElementById('install-app-btn');
   if (btn) btn.style.display = 'none';
 });
 
-function isRunningStandalone(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-// Unified "I-download ang App" handler — works whether or not the browser
-// fired the native install prompt yet, and on every platform (Android,
-// iPhone, or desktop). This guarantees anyone who opens the link or scans
-// the QR code sees a way to install, not just users of certain browsers.
-function installApp(){
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.finally(() => {
-      deferredInstallPrompt = null;
-      const btn = document.getElementById('install-app-btn');
-      if (btn) btn.style.display = 'none';
-    });
-    return;
-  }
-  const ua = navigator.userAgent || '';
-  const isIOS = /iphone|ipad|ipod/i.test(ua);
-  const isAndroid = /android/i.test(ua);
-  if (isIOS) {
-    alert('Paano i-install sa iPhone/iPad:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.');
-  } else if (isAndroid) {
-    alert('Paano i-install sa Android:\n\n1. Gamitin ang Chrome\n2. I-tap ang ⋮ (3 tuldok) sa taas-kanan\n3. I-tap "Add to Home screen" o "Install app"\n4. I-tap "Install"\n\nLalabas na ang app icon sa Home Screen mo.');
-  } else {
-    alert('Paano i-install sa Laptop/Desktop (Chrome o Edge):\n\n1. Hanapin ang install icon (⊕) sa dulo ng address bar\n2. I-click ito, tapos "Install"\n\nKung wala kang makita, gamitin mo na lang ang app dito sa browser — gagana pa rin ito nang normal, offline pa rin.');
-  }
-}
-
-// Show the button on load unless the app is already installed/running
-// standalone. This makes it always visible instead of only appearing for
-// browsers that fire beforeinstallprompt.
-(function initInstallButtonVisibility(){
+/* iOS Safari never fires 'beforeinstallprompt' — there is no programmatic
+   install API there. Show manual "Add to Home Screen" instructions instead,
+   so iPhone users still see how to install rather than the button just
+   silently never appearing. */
+(function setupIOSInstallHint(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isInStandaloneMode = window.navigator.standalone === true;
+  if(!isIOS || isInStandaloneMode) return;
   const btn = document.getElementById('install-app-btn');
-  if (!btn) return;
-  if (isRunningStandalone()) { btn.style.display = 'none'; return; }
+  if(!btn) return;
   btn.style.display = 'inline-flex';
+  const label = document.getElementById('install-app-btn-label');
+  if(label) label.textContent = 'Paano mag-install (iPhone)';
+  btn.onclick = function(){
+    alert('Paano i-install sa iPhone:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.');
+  };
 })();
 </script>
 </body>
