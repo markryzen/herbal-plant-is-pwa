@@ -3,27 +3,6 @@
 Ito na yung "totoong app" version — pwede i-install sa laptop o phone bilang standalone
 app (may sariling icon, walang browser address bar), at gumagana pa rin offline.
 
-## 🌿 BAGO: Awtomatiko nang na-train ang AI (walang kailangang gawin)
-
-Dating kailangan mong mag-upload ng 3-5 sample photo *bawat isa* sa 39 halaman gamit
-ang "Train AI" tab bago gumana nang tama ang scanner (kung hindi, "Demo Mode" lang ang
-ipapakita). Ngayon, may kasama nang **195 pinili at na-optimize na larawan** (5 bawat
-halaman, mula sa dataset mo sa `Herbals` folder) sa loob ng `training-samples/` folder.
-
-Sa unang pagbukas ng app (kapag naka-serve na sa `http://` o `https://` — tingnan ang
-mga OPTION sa baba), awtomatiko itong mag-a-"train": makikita mo sa itaas ng "Train AI"
-tab ang progress bar na "Ina-train ang AI gamit ang sample photos... (x / 39)" habang
-nire-run ng AI (MobileNet) ang bawat larawan. Ilang segundo lang ito. Pagkatapos, dapat
-makita mong lahat ng 39 halaman ay may "5 samples na-train", at kapag nag-scan ka na,
-lalabas na ang totoong **"AI Match"** tag sa result — hindi na "Demo Mode".
-
-- Kung gusto mong i-force ulit ang auto-train (hal. pagkatapos mag-reset), may button
-  na **"⚡ I-retrain gamit ang bundled na sample photos"** sa loob ng "Train AI" tab.
-- Pwede ka pa ring magdagdag ng sarili mong larawan (camera o upload) sa parehong tab
-  kung gusto mong dagdagan pa ang accuracy — hindi ito mababawasan o mapapalitan ng
-  auto-train, dahil sinki-check muna nito kung may laman na ang isang halaman bago ito
-  awtomatikong i-train.
-
 ## Bakit kailangan pang i-run sa server (hindi lang i-double click)
 
 Ang mga browser (Chrome, Edge, Safari) ay HINDI nagpapa-install ng PWA at hindi
@@ -72,32 +51,18 @@ yung mga steps sa baba, mabilis lang naman.
 
 ---
 
-## OPTION B — I-deploy online gamit lang ang iPhone (walang laptop, walang code)
+## OPTION B — I-deploy online (para totoong HTTPS link, pwede buksan kahit saan)
 
-Ito yung pinaka-madali kung wala kang laptop / hirap kang mag-develop — gagawa ka lang
-ng account, mag-uupload ng folder, tapos may lalabas nang link. Sundin lang:
+Kung gusto mong may link na pwedeng buksan ng panelist mula sa sarili nilang phone:
 
-1. Sa iPhone mo, buksan ang **Safari**, pumunta sa **https://app.netlify.com/drop**
-2. I-tap ang **"Browse to upload"** (o kung mayroong drag-and-drop area, pwede mo ring
-   i-drag ang buong `herbal-pwa` folder papunta doon galing sa **Files app**).
-3. Sa file picker na lalabas, piliin ang **buong `herbal-pwa` folder** (kung saan naroon
-   ang `index.html`, `manifest.json`, `service-worker.js`, `icons/`, at
-   `training-samples/`) — huwag lang isa-isang file, buong folder.
-4. Hintayin mag-upload (may ~7MB ito dahil sa mga training photo, ilang segundo lang
-   depende sa internet mo).
-5. Awtomatiko kang bibigyan ng libreng HTTPS link (hal. `random-name.netlify.app`).
-6. I-tap yung link — mag-a-auto-train na agad ang AI (tingnan yung banner sa "Train AI"
-   tab), tapos pwede mo nang subukang mag-scan.
-7. Para i-install bilang app icon sa Home Screen: sa Safari, i-tap ang **Share** button
-   (kahon na may arrow) → **"Add to Home Screen"**.
+1. Pumunta sa **https://app.netlify.com/drop**
+2. I-drag-and-drop ang buong folder na ito (yung naglalaman ng `index.html`,
+   `manifest.json`, `service-worker.js`, at `icons/`).
+3. Automatic kang bibigyan ng libreng HTTPS link (hal. `random-name.netlify.app`).
+4. Buksan yun sa Chrome (laptop o phone) → lalabas na ang "Install" option.
 
-Kung hindi lumabas ang folder-picker (minsan iba ang behavior ng iOS depende sa
-version), i-zip mo na lang muna ang `herbal-pwa` folder (sa Files app: i-tap nang
-matagal ang folder → "Compress"), tapos i-upload yung `.zip` — tinatanggap din ito ng
-Netlify Drop at awtomatiko nitong iek-extract.
-
-(Kung may laptop/desktop ka naman, mas simple pa: i-drag-and-drop lang buong folder sa
-parehong site. Alternative din: GitHub Pages, Vercel, Firebase Hosting.)
+(Alternative: GitHub Pages, Vercel, Firebase Hosting — parehas lang na drag-and-drop
+o push ang proseso.)
 
 ---
 
@@ -146,6 +111,24 @@ i-deploy nang totoo (hal. publikong website), dapat mong i-configure ang
 para protektahan ang datos.
 
 ---
+
+## Bagong Features — Admin Panel at Bookmark/Saved Plants
+
+**Bookmark/Saved Plants** — sa Detail page ng bawat halaman, may bookmark icon
+(♡) sa kanang-itaas. Kapag pinindot, na-save ang halaman sa "Naka-save Mo"
+section sa Home screen, at makikita rin sa Library gamit ang "❤ Naka-save"
+filter chip. Naka-store ito nang lokal sa browser (localStorage) — personal
+na preference ng bawat user/device.
+
+**Admin Panel** — nasa About tab, "🔑 Buksan ang Admin Panel" button. Default
+password: `herbal2026` (hanapin ang `ADMIN_PASSWORD` sa `index.html` kung
+gusto mong palitan). Dito pwedeng magdagdag, mag-edit, o magbura ng plant
+records nang direkta sa loob ng app — naka-sync agad sa Firestore kapag
+naka-connect. **Mahalagang paalala:** ito ay simpleng client-side password
+check lamang, hindi totoong authentication system — sapat para sa thesis
+demo/prototype, pero hindi dapat gamitin nang ganito kung ilalabas ang system
+sa publiko. Para sa totoong deployment, dapat palitan ito ng Firebase
+Authentication kasabay ng properly-configured Firestore Security Rules.
 
 ## Mga tandaan
 
@@ -213,7 +196,5 @@ herbal-pwa/
 ├── manifest.json        → app name, icon, theme color para sa install
 ├── service-worker.js    → nagpapagana ng offline caching
 ├── icons/                → app icons (192px, 512px, maskable)
-├── training-samples/    → 195 pinili at na-optimize na larawan (5 bawat halaman)
-│                          na ginagamit para awtomatikong ma-train ang AI
 └── README.md             → itong file
 ```
