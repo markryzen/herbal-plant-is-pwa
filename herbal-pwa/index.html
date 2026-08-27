@@ -1431,6 +1431,48 @@ async function dbClearAll(){
     tx.onerror = ()=>reject(tx.error);
   });
 }
+async function dbDeleteByPlantId(plantId){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const idx = store.index('plantId');
+    const req = idx.openCursor(IDBKeyRange.only(plantId));
+    req.onsuccess = (e)=>{
+      const cursor = e.target.result;
+      if(cursor){ cursor.delete(); cursor.continue(); }
+    };
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function clearPlantTraining(plantId){
+  const p = PLANTS.find(x=>x.id===plantId);
+  if(!p) return;
+  const count = (trainingData[plantId]||[]).length;
+  if(count===0){ alert(`Wala pang training samples ang ${p.name}.`); return; }
+  if(!confirm(`Buburahin ang lahat ng ${count} training sample ng "${p.name}" (lokal at sa cloud). Hindi na maibabalik ito. Magpatuloy?`)) return;
+
+  try{ await dbDeleteByPlantId(plantId); }catch(e){ console.warn('Local delete failed:', e); }
+
+  if(firestoreConnected){
+    try{
+      const snap = await firestoreDB.collection(EMBEDDINGS_COLLECTION).where('plantId','==',plantId).get();
+      const batch = firestoreDB.batch();
+      snap.forEach(doc=> batch.delete(doc.ref));
+      await batch.commit();
+    }catch(e){
+      console.warn('Cloud delete failed:', e);
+      alert('Na-clear nang lokal, pero may error sa pagbura sa cloud: ' + e.message);
+    }
+  }
+
+  trainingData[plantId] = [];
+  renderTrainList();
+  renderHome();
+  filterLibrary();
+  alert(`Na-clear na ang training data ng ${p.name}. Puwede mo na siyang i-train ulit nang tama.`);
+}
 async function loadTrainingDataFromDB(){
   try{
     const rows = await dbGetAll();
@@ -1588,9 +1630,14 @@ function renderTrainList(){
           <div class="samples ${samples.length>0?'has-data':''}">${samples.length} sample${samples.length===1?'':'s'} na-train</div>
           ${thumbs?`<div class="thumbs">${thumbs}</div>`:''}
         </div>
-        <button class="train-add-btn" onclick="startTrainCapture(${p.id})" title="Magdagdag ng larawan">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="train-add-btn" onclick="startTrainCapture(${p.id})" title="Magdagdag ng larawan">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <button class="train-add-btn" style="background:var(--clay);" onclick="clearPlantTraining(${p.id})" title="I-clear ang training ng halamang ito">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+          </button>
+        </div>
       </div>`;
     }).join('');
   }
