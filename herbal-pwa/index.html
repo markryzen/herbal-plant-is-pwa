@@ -1767,6 +1767,23 @@ async function handleTrainUpload(evt){
   const plantId = trainTargetPlantId;
   let added = 0, failed = 0;
 
+  // computeEmbeddingFromElement (one attempt), with a small pause first —
+  // pausing between images lets the browser's WebGL context recover instead
+  // of exhausting GPU resources when many images are processed back-to-back.
+  async function computeWithRetry(img){
+    for(let attempt=0; attempt<2; attempt++){
+      try{
+        const vector = computeEmbeddingFromElement(img);
+        if(vector) return vector;
+      }catch(e){
+        console.warn(`Embedding attempt ${attempt+1} failed:`, e);
+      }
+      // WebGL context looked exhausted — give it a longer breather then retry once.
+      await new Promise(r=>setTimeout(r, 400));
+    }
+    return null;
+  }
+
   for(let i=0;i<files.length;i++){
     if(progressEl){
       progressEl.style.display = 'block';
@@ -1775,8 +1792,8 @@ async function handleTrainUpload(evt){
     try{
       const dataUrl = await readFileAsDataURL(files[i]);
       const img = await loadImageFromSrc(dataUrl);
-      const vector = computeEmbeddingFromElement(img);
-      if(!vector){ failed++; continue; }
+      const vector = await computeWithRetry(img);
+      if(!vector){ failed++; await new Promise(r=>setTimeout(r,150)); continue; }
       const tc = document.createElement('canvas');
       tc.width = 220; tc.height = 220;
       tc.getContext('2d').drawImage(img,0,0,220,220);
@@ -1791,6 +1808,9 @@ async function handleTrainUpload(evt){
       console.warn('Failed to process training image:', e);
       failed++;
     }
+    // Brief pause between every image (not just failures) so WebGL/GPU memory
+    // has a chance to be released before the next texture upload.
+    await new Promise(r=>setTimeout(r, 120));
   }
 
   if(progressEl){ progressEl.style.display = 'none'; }
