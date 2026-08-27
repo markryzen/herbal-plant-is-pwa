@@ -652,6 +652,9 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       </div>
       <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;" onclick="openAdminEditor(null)">+ Magdagdag ng Bagong Halaman</button>
       <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;margin-top:10px;" onclick="showScreen('train'); renderTrainChips(); renderTrainList();">🧠 Buksan ang Train AI</button>
+      <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:10px;" onclick="exportTrainingData()">⬇️ I-export ang Training Data (backup file)</button>
+      <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="document.getElementById('import-training-input').click()">⬆️ I-import ang Training Data mula sa file</button>
+      <input type="file" id="import-training-input" accept="application/json" style="display:none;" onchange="importTrainingData(event)">
       <div class="train-list" id="admin-list" style="padding-top:6px;"></div>
     </div>
 
@@ -1465,6 +1468,59 @@ async function dbDeleteByPlantId(plantId){
     tx.onerror = ()=>reject(tx.error);
   });
 }
+/* ================= EXPORT / IMPORT TRAINING DATA (Firestore-independent backup) =================
+   Lets training happen on one device (e.g. laptop) and be transferred to
+   another (e.g. phone) via a plain .json file — completely bypassing any
+   Firestore connectivity issues. Useful as a reliable fallback when the
+   cloud connection is flaky on a particular device/network. */
+function exportTrainingData(){
+  const totalSamples = Object.values(trainingData).reduce((s,arr)=>s+arr.length,0);
+  if(totalSamples===0){ alert('Wala pang training data na i-eexport.'); return; }
+  const payload = { exportedAt: new Date().toISOString(), trainingData };
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `herbal-training-data-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert(`Na-export ang training data ng ${totalSamples} larawan mula sa ${Object.keys(trainingData).length} halaman. I-transfer mo ang file na ito papunta sa ibang device (hal. sa pamamagitan ng Google Drive, email, o USB cable), tapos gamitin ang "I-import" button doon.`);
+}
+
+async function importTrainingData(evt){
+  const file = evt.target.files[0];
+  evt.target.value = '';
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const imported = payload.trainingData || payload; // support raw or wrapped format
+    let addedPlants = 0, addedSamples = 0;
+    for(const plantIdStr of Object.keys(imported)){
+      const plantId = Number(plantIdStr);
+      const samples = imported[plantIdStr];
+      if(!Array.isArray(samples) || samples.length===0) continue;
+      if(!trainingData[plantId]) trainingData[plantId] = [];
+      for(const s of samples){
+        if(!s || !s.vector) continue;
+        trainingData[plantId].push({vector: s.vector, thumb: s.thumb});
+        try{ await dbAddEmbedding(plantId, s.vector, s.thumb); }catch(e){}
+        addedSamples++;
+      }
+      addedPlants++;
+    }
+    renderTrainList();
+    renderHome();
+    filterLibrary();
+    alert(`Na-import ang ${addedSamples} larawan mula sa ${addedPlants} halaman. Naka-save na ito nang lokal sa device na ito — gagana na ang scanning kahit walang Firestore connection.`);
+  }catch(e){
+    console.error(e);
+    alert('Hindi mabasa ang file. Siguraduhing ito yung tamang .json file na na-export mula sa parehong app.');
+  }
+}
+
 async function clearPlantTraining(plantId){
   const p = PLANTS.find(x=>x.id===plantId);
   if(!p) return;
