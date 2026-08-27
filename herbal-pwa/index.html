@@ -1051,13 +1051,14 @@ function retryFirestoreConnection(){
 
 /* Push one training sample to Firestore so every device scanning the app
    (not just the one it was trained on) can use it for AI matching. */
-async function syncEmbeddingToFirestore(plantId, vector, thumb){
+async function syncEmbeddingToFirestore(plantId, vector, thumb, clientId){
   if(!firestoreConnected) return;
   try{
     await firestoreDB.collection(EMBEDDINGS_COLLECTION).add({
       plantId: Number(plantId),
       vector,
       thumb,
+      clientId,
       createdAt: Date.now()
     });
   }catch(e){
@@ -1067,17 +1068,22 @@ async function syncEmbeddingToFirestore(plantId, vector, thumb){
 
 /* Pull every training sample anyone has added (from Firestore) and merge it
    into the in-memory trainingData used for AI matching — this is what makes
-   scanning work correctly on a phone even if training only happened on a laptop. */
+   scanning work correctly on a phone even if training only happened on a laptop.
+   Dedupes against whatever is already loaded (e.g. from local IndexedDB) using
+   each sample's clientId, and NEVER resets trainingData — a failed or empty
+   Firestore fetch must never erase samples that are only local so far. */
 async function loadEmbeddingsFromFirestore(){
   try{
     const snap = await withTimeout(firestoreDB.collection(EMBEDDINGS_COLLECTION).get(), 12000);
     if(snap.empty) return;
-    trainingData = {};
+    const knownClientIds = new Set();
+    Object.values(trainingData).forEach(arr=> arr.forEach(s=>{ if(s.clientId) knownClientIds.add(s.clientId); }));
     snap.forEach(doc=>{
       const d = doc.data();
       if(!d || !d.plantId || !d.vector) return;
+      if(d.clientId && knownClientIds.has(d.clientId)) return; // already have this exact sample locally
       if(!trainingData[d.plantId]) trainingData[d.plantId] = [];
-      trainingData[d.plantId].push({vector: d.vector, thumb: d.thumb, cloud:true, docId: doc.id});
+      trainingData[d.plantId].push({vector: d.vector, thumb: d.thumb, clientId: d.clientId, cloud:true, docId: doc.id});
     });
     renderTrainList();
     renderHome();
@@ -1426,12 +1432,16 @@ function openDB(){
     req.onerror = ()=>reject(req.error);
   });
 }
-async function dbAddEmbedding(plantId, vector, thumb){
+function makeClientId(){
+  return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+}
+async function dbAddEmbedding(plantId, vector, thumb, clientId){
+  clientId = clientId || makeClientId();
   const db = await openDB();
   return new Promise((resolve,reject)=>{
     const tx = db.transaction(STORE_NAME,'readwrite');
-    tx.objectStore(STORE_NAME).add({plantId, vector, thumb});
-    tx.oncomplete = ()=>resolve();
+    tx.objectStore(STORE_NAME).add({plantId, vector, thumb, clientId});
+    tx.oncomplete = ()=>resolve(clientId);
     tx.onerror = ()=>reject(tx.error);
   });
 }
@@ -1505,8 +1515,9 @@ async function importTrainingData(evt){
       if(!trainingData[plantId]) trainingData[plantId] = [];
       for(const s of samples){
         if(!s || !s.vector) continue;
-        trainingData[plantId].push({vector: s.vector, thumb: s.thumb});
-        try{ await dbAddEmbedding(plantId, s.vector, s.thumb); }catch(e){}
+        const clientId = s.clientId || makeClientId();
+        trainingData[plantId].push({vector: s.vector, thumb: s.thumb, clientId});
+        try{ await dbAddEmbedding(plantId, s.vector, s.thumb, clientId); }catch(e){}
         addedSamples++;
       }
       addedPlants++;
@@ -1556,7 +1567,7 @@ async function loadTrainingDataFromDB(){
     // discard cloud-synced samples for plants trained on other devices/deployments.
     rows.forEach(r=>{
       if(!trainingData[r.plantId]) trainingData[r.plantId] = [];
-      trainingData[r.plantId].push({vector:r.vector, thumb:r.thumb});
+      trainingData[r.plantId].push({vector:r.vector, thumb:r.thumb, clientId:r.clientId});
     });
   }catch(e){ console.warn('IndexedDB unavailable:', e); }
   renderTrainList();
@@ -1798,10 +1809,11 @@ async function handleTrainUpload(evt){
       tc.width = 220; tc.height = 220;
       tc.getContext('2d').drawImage(img,0,0,220,220);
       const thumb = tc.toDataURL('image/jpeg', 0.7);
-      await dbAddEmbedding(plantId, vector, thumb);
-      syncEmbeddingToFirestore(plantId, vector, thumb);
+      const clientId = makeClientId();
+      await dbAddEmbedding(plantId, vector, thumb, clientId);
+      syncEmbeddingToFirestore(plantId, vector, thumb, clientId);
       if(!trainingData[plantId]) trainingData[plantId] = [];
-      trainingData[plantId].push({vector, thumb});
+      trainingData[plantId].push({vector, thumb, clientId});
       added++;
       renderTrainList();
     }catch(e){
@@ -2061,13 +2073,11 @@ renderLibraryChips();
 filterLibrary();
 setupVoice();
 renderTrainChips();
-if(!isFirebaseConfigured()){
-  // Offline / no-cloud fallback: use the local IndexedDB copy as the only source.
-  loadTrainingDataFromDB();
-}
-// When Firebase IS configured, initFirebase() below loads training samples
-// from Firestore only — this avoids counting the same sample twice (once from
-// the local IndexedDB cache, once from its synced Firestore copy).
+// Always load local IndexedDB training data first as the reliable baseline —
+// this guarantees training never appears to "disappear" just because Firestore
+// is slow, offline, or fails to connect. Firestore data merges in on top of
+// this without duplicating, using each sample's clientId to dedupe.
+loadTrainingDataFromDB();
 loadAIModel();
 initFirebase();
 
