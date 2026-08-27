@@ -622,7 +622,9 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 
         <h4>Tungkol sa Plant Database</h4>
         <p>Ang plant information ay naka-store sa <strong>Firebase Firestore</strong>, isang cloud database — instant na naa-access ng app kahit saan, at pwede itong i-update nang hindi kailangang baguhin ang code. Kung hindi pa naka-connect, gumagamit ang app ng local copy ng datos para tuloy-tuloy pa rin ang demo.</p>
-        <div id="db-status-badge" class="db-status-badge db-offline"><span class="dbdot"></span>Checking database...</div><br>
+        <div id="db-status-badge" class="db-status-badge db-offline"><span class="dbdot"></span>Checking database...</div>
+        <button onclick="retryFirestoreConnection()" style="display:block;margin:8px 0 0;background:none;border:1px solid var(--line);color:var(--forest);font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;font-family:'Inter';">🔄 Ulitin ang Koneksyon</button>
+        <br>
         <button class="seed-db-btn" onclick="seedFirestore()">☁️ I-upload ang Plant Data sa Firestore</button>
 
         <h4 style="margin-top:20px;">Tungkol sa AI Plant Scanner</h4>
@@ -1016,7 +1018,7 @@ function isFirebaseConfigured(){
 function initFirebase(){
   if(!isFirebaseConfigured()){ setDBStatus('not-configured'); return; }
   try{
-    firebase.initializeApp(firebaseConfig);
+    if(!firebase.apps || firebase.apps.length===0){ firebase.initializeApp(firebaseConfig); }
     firestoreDB = firebase.firestore();
     firestoreConnected = true;
     setDBStatus('connecting');
@@ -1026,6 +1028,22 @@ function initFirebase(){
     console.warn('Firebase init failed:', e);
     setDBStatus('error');
   }
+}
+
+/* Every Firestore read gets a hard timeout so the UI never sits on
+   "Connecting..." forever on a flaky connection — after 12s it fails
+   clearly instead, and the person can press Retry. */
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), ms))
+  ]);
+}
+
+function retryFirestoreConnection(){
+  setDBStatus('connecting');
+  loadPlantsFromFirestore();
+  loadEmbeddingsFromFirestore();
 }
 
 /* Push one training sample to Firestore so every device scanning the app
@@ -1049,8 +1067,9 @@ async function syncEmbeddingToFirestore(plantId, vector, thumb){
    scanning work correctly on a phone even if training only happened on a laptop. */
 async function loadEmbeddingsFromFirestore(){
   try{
-    const snap = await firestoreDB.collection(EMBEDDINGS_COLLECTION).get();
+    const snap = await withTimeout(firestoreDB.collection(EMBEDDINGS_COLLECTION).get(), 12000);
     if(snap.empty) return;
+    trainingData = {};
     snap.forEach(doc=>{
       const d = doc.data();
       if(!d || !d.plantId || !d.vector) return;
@@ -1067,7 +1086,7 @@ async function loadEmbeddingsFromFirestore(){
 
 async function loadPlantsFromFirestore(){
   try{
-    const snap = await firestoreDB.collection(PLANTS_COLLECTION).get();
+    const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 12000);
     if(snap.empty){
       setDBStatus('empty');
       return;
