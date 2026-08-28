@@ -1570,6 +1570,7 @@ async function loadTrainingDataFromDB(){
       trainingData[r.plantId].push({vector:r.vector, thumb:r.thumb, clientId:r.clientId});
     });
   }catch(e){ console.warn('IndexedDB unavailable:', e); }
+  trainingDataReady = true;
   renderTrainList();
   renderHome();
   renderLibraryChips();
@@ -1923,9 +1924,25 @@ function showCapturedFrame(dataUrl){
   document.getElementById('scan-frame').style.display='none';
 }
 
-function runAnalysis(canvas){
+let trainingDataReady = false;
+function waitForTrainingDataReady(maxMs=3000){
+  return new Promise(resolve=>{
+    if(trainingDataReady) return resolve();
+    const start = Date.now();
+    const iv = setInterval(()=>{
+      if(trainingDataReady || Date.now()-start>maxMs){ clearInterval(iv); resolve(); }
+    }, 50);
+  });
+}
+
+async function runAnalysis(canvas){
   const aw = document.getElementById('analyzing-wrap');
   aw.classList.add('show');
+  // Guard against a race where Scan runs before the local training data
+  // (IndexedDB) has finished loading — without this, a scan taken right after
+  // opening the app could wrongly fall back to Demo Mode even though the
+  // device actually has trained samples.
+  await waitForTrainingDataReady();
   const totalSamples = Object.values(trainingData).reduce((s,arr)=>s+arr.length,0);
   const usingRealAI = aiReady && totalSamples >= 1;
   const msgs = usingRealAI
