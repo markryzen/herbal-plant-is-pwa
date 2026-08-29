@@ -1540,30 +1540,43 @@ async function importTrainingData(evt){
     const payload = JSON.parse(text);
     const imported = payload.trainingData || payload; // support raw or wrapped format
     const totalToImport = Object.values(imported).reduce((s,arr)=> s + (Array.isArray(arr)?arr.length:0), 0);
-    let addedPlants = 0, addedSamples = 0;
+
+    // Build a set of clientIds we already have locally, so importing the same
+    // file more than once (or a file that overlaps with existing data) never
+    // creates duplicate samples — this is what caused counts like "425
+    // samples" for a plant that should only have ~10.
+    const existingClientIds = new Set();
+    Object.values(trainingData).forEach(arr=> arr.forEach(s=>{ if(s.clientId) existingClientIds.add(s.clientId); }));
+
+    let addedPlants = 0, addedSamples = 0, skippedDupes = 0, processed = 0;
     for(const plantIdStr of Object.keys(imported)){
       const plantId = Number(plantIdStr);
       const samples = imported[plantIdStr];
       if(!Array.isArray(samples) || samples.length===0) continue;
       if(!trainingData[plantId]) trainingData[plantId] = [];
+      let addedForThisPlant = false;
       for(const s of samples){
         if(!s || !s.vector) continue;
+        processed++;
+        if(progressEl){
+          progressEl.style.display = 'block';
+          progressEl.textContent = `Nag-i-import ng training data: ${processed} / ${totalToImport}...`;
+        }
         const clientId = s.clientId || makeClientId();
+        if(existingClientIds.has(clientId)){ skippedDupes++; continue; }
+        existingClientIds.add(clientId);
         trainingData[plantId].push({vector: s.vector, thumb: s.thumb, clientId});
         try{ await dbAddEmbedding(plantId, s.vector, s.thumb, clientId); }catch(e){}
         addedSamples++;
-        if(progressEl){
-          progressEl.style.display = 'block';
-          progressEl.textContent = `Nag-i-import ng training data: ${addedSamples} / ${totalToImport}...`;
-        }
+        addedForThisPlant = true;
       }
-      addedPlants++;
+      if(addedForThisPlant) addedPlants++;
     }
     if(progressEl){ progressEl.style.display = 'none'; }
     renderTrainList();
     renderHome();
     filterLibrary();
-    alert(`Na-import ang ${addedSamples} larawan mula sa ${addedPlants} halaman. Naka-save na ito nang lokal sa device na ito — gagana na ang scanning kahit walang Firestore connection.`);
+    alert(`Na-import ang ${addedSamples} larawan mula sa ${addedPlants} halaman.` + (skippedDupes>0 ? ` (${skippedDupes} na-skip dahil duplicate na.)` : '') + ` Naka-save na ito nang lokal sa device na ito — gagana na ang scanning kahit walang Firestore connection.`);
   }catch(e){
     if(progressEl){ progressEl.style.display = 'none'; }
     console.error(e);
