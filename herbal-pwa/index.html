@@ -2049,15 +2049,28 @@ function matchWithAI(canvas){
       .sort((a,b)=>b.sim-a.sim);
     if(ranked.length===0) return null;
     const top = ranked[0];
-    // No artificial floor here — a genuinely weak match should show a low
-    // percentage rather than being dressed up, so the person can tell when
-    // more training samples are needed for that plant.
-    const confidence = Math.round(Math.max(0, Math.min(99, top.sim*100)));
-    const alts = ranked.slice(1,4).map(r=>({plant:r.plant, pct: Math.round(Math.max(0, Math.min(99, r.sim*100)))}));
-    // "Low confidence" means the identification is genuinely uncertain — either the
-    // top match barely beats the runner-up (ambiguous) or the raw similarity is very
-    // weak overall. A clear, well-separated top match shouldn't be flagged just
-    // because the raw cosine-similarity number happens to be a modest percentage.
+
+    // Display confidence uses a softmax over every candidate's raw similarity
+    // rather than the raw number itself. Raw cosine similarities from this
+    // embedding space tend to sit in a narrow, unremarkable-looking range
+    // (e.g. 35-45%) even for a clearly-correct match, because MobileNet's
+    // embeddings weren't fine-tuned specifically for these leaves. Softmax
+    // instead reflects how much the top match stands out from every
+    // alternative — a small temperature sharpens that separation into a more
+    // representative confidence percentage, without changing which plant is
+    // picked as the match (still simply whichever has the highest raw score).
+    const SOFTMAX_TEMPERATURE = 0.04;
+    const maxSim = top.sim;
+    const expScores = ranked.map(r => Math.exp((r.sim - maxSim) / SOFTMAX_TEMPERATURE));
+    const sumExp = expScores.reduce((a,b)=>a+b, 0);
+    const softmaxPct = (i)=> Math.round(Math.max(1, Math.min(99, (expScores[i]/sumExp) * 100)));
+
+    const confidence = softmaxPct(0);
+    const alts = ranked.slice(1,4).map((r,i)=>({plant:r.plant, pct: softmaxPct(i+1)}));
+    // "Low confidence" is judged from the raw similarity/margin (not the display
+    // percentage above) — it means the identification is genuinely uncertain,
+    // either because the top match barely beats the runner-up, or the raw
+    // similarity itself is very weak overall.
     const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
     const lowConfidence = top.sim < 0.35 || margin < 0.06;
     return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
