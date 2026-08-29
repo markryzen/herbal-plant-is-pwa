@@ -2059,7 +2059,7 @@ function matchWithAI(canvas){
     // alternative — a small temperature sharpens that separation into a more
     // representative confidence percentage, without changing which plant is
     // picked as the match (still simply whichever has the highest raw score).
-    const SOFTMAX_TEMPERATURE = 0.04;
+    const SOFTMAX_TEMPERATURE = 0.018;
     const maxSim = top.sim;
     const expScores = ranked.map(r => Math.exp((r.sim - maxSim) / SOFTMAX_TEMPERATURE));
     const sumExp = expScores.reduce((a,b)=>a+b, 0);
