@@ -655,6 +655,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:10px;" onclick="exportTrainingData()">⬇️ I-export ang Training Data (backup file)</button>
       <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="document.getElementById('import-training-input').click()">⬆️ I-import ang Training Data mula sa file</button>
       <input type="file" id="import-training-input" accept="application/json" style="display:none;" onchange="importTrainingData(event)">
+      <div id="admin-bulk-progress" style="display:none;margin:10px 20px 0;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--forest);font-weight:700;text-align:center;"></div>
       <div class="train-list" id="admin-list" style="padding-top:6px;"></div>
     </div>
 
@@ -1402,6 +1403,36 @@ async function loadAIModel(){
   }
 }
 
+/* After a long bulk-training session (many plants, hundreds of images in one
+   tab), the browser's WebGL context can become exhausted and every embedding
+   computation starts failing — simply retrying the same image does nothing
+   because the underlying graphics context itself is broken. This fully
+   disposes and reloads the TensorFlow.js backend + MobileNet model, which in
+   practice frees up GPU resources and lets training continue without the
+   person having to reload the whole page. */
+async function resetAIModel(){
+  try{
+    if(typeof tf !== 'undefined' && tf.engine){
+      tf.engine().disposeVariables();
+      tf.engine().reset();
+    }
+  }catch(e){ console.warn('TF engine reset failed:', e); }
+  aiReady = false;
+  mobilenetModel = null;
+  await new Promise(r=>setTimeout(r, 300));
+  try{
+    mobilenetModel = await mobilenet.load({version:2, alpha:1.0});
+    aiReady = true;
+    setAIStatus('ready');
+    return true;
+  }catch(e){
+    console.warn('Model reload after reset failed:', e);
+    aiLoadFailed = true;
+    setAIStatus('error');
+    return false;
+  }
+}
+
 function computeEmbeddingFromElement(el){
   if(!mobilenetModel) return null;
   return tf.tidy(()=>{
@@ -1503,10 +1534,12 @@ async function importTrainingData(evt){
   const file = evt.target.files[0];
   evt.target.value = '';
   if(!file) return;
+  const progressEl = document.getElementById('admin-bulk-progress');
   try{
     const text = await file.text();
     const payload = JSON.parse(text);
     const imported = payload.trainingData || payload; // support raw or wrapped format
+    const totalToImport = Object.values(imported).reduce((s,arr)=> s + (Array.isArray(arr)?arr.length:0), 0);
     let addedPlants = 0, addedSamples = 0;
     for(const plantIdStr of Object.keys(imported)){
       const plantId = Number(plantIdStr);
@@ -1519,14 +1552,20 @@ async function importTrainingData(evt){
         trainingData[plantId].push({vector: s.vector, thumb: s.thumb, clientId});
         try{ await dbAddEmbedding(plantId, s.vector, s.thumb, clientId); }catch(e){}
         addedSamples++;
+        if(progressEl){
+          progressEl.style.display = 'block';
+          progressEl.textContent = `Nag-i-import ng training data: ${addedSamples} / ${totalToImport}...`;
+        }
       }
       addedPlants++;
     }
+    if(progressEl){ progressEl.style.display = 'none'; }
     renderTrainList();
     renderHome();
     filterLibrary();
     alert(`Na-import ang ${addedSamples} larawan mula sa ${addedPlants} halaman. Naka-save na ito nang lokal sa device na ito — gagana na ang scanning kahit walang Firestore connection.`);
   }catch(e){
+    if(progressEl){ progressEl.style.display = 'none'; }
     console.error(e);
     alert('Hindi mabasa ang file. Siguraduhing ito yung tamang .json file na na-export mula sa parehong app.');
   }
@@ -1792,6 +1831,16 @@ async function handleTrainUpload(evt){
       }
       // WebGL context looked exhausted — give it a longer breather then retry once.
       await new Promise(r=>setTimeout(r, 400));
+    }
+    // Both quick retries failed — the WebGL context is likely genuinely broken
+    // after a long session. Do a full model reset (heavier, ~1-2s) and try once more.
+    if(progressEl){ progressEl.textContent = 'Ni-reset ang AI model (sobrang tagal na ng session)...'; }
+    const recovered = await resetAIModel();
+    if(recovered){
+      try{
+        const vector = computeEmbeddingFromElement(img);
+        if(vector) return vector;
+      }catch(e){ console.warn('Embedding still failing after model reset:', e); }
     }
     return null;
   }
