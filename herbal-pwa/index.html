@@ -2072,7 +2072,7 @@ function matchWithAI(canvas){
     // either because the top match barely beats the runner-up, or the raw
     // similarity itself is very weak overall.
     const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
-    const lowConfidence = top.sim < 0.35 || margin < 0.06;
+    const lowConfidence = confidence < 55;
     return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
   }catch(e){
     console.warn('AI match error, falling back to demo mode:', e);
