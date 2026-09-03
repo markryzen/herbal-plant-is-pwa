@@ -100,9 +100,9 @@ body{
   }
   .navbtn{ font-size:12px; gap:5px; padding:10px 2px 8px; }
   .navbtn svg{ width:24px; height:24px; }
-  .navbtn.scanbtn{ top:-14px; }
-  .navbtn.scanbtn .scanicon-wrap{ width:56px; height:56px; }
-  .navbtn.scanbtn svg{ width:26px; height:26px; }
+  .navbtn.scanbtn{ top:0; }
+  .navbtn.scanbtn .scanicon-wrap{ width:40px; height:40px; }
+  .navbtn.scanbtn svg{ width:19px; height:19px; }
 }
 /* When installed/launched as a standalone PWA (from Home Screen), always go
    fullscreen regardless of viewport width detection above. */
@@ -123,9 +123,9 @@ body{
   }
   .navbtn{ font-size:12px; gap:5px; padding:10px 2px 8px; }
   .navbtn svg{ width:24px; height:24px; }
-  .navbtn.scanbtn{ top:-14px; }
-  .navbtn.scanbtn .scanicon-wrap{ width:56px; height:56px; }
-  .navbtn.scanbtn svg{ width:26px; height:26px; }
+  .navbtn.scanbtn{ top:0; }
+  .navbtn.scanbtn .scanicon-wrap{ width:40px; height:40px; }
+  .navbtn.scanbtn svg{ width:19px; height:19px; }
 }
 .statusbar .icons{display:flex; gap:5px; align-items:center;}
 .screens{ flex:1 1 auto; position:relative; overflow:hidden; }
@@ -153,13 +153,13 @@ body{
 .navbtn svg{ width:19px; height:19px; stroke:var(--ink-soft); fill:none; stroke-width:1.7; }
 .navbtn.active{ color:var(--forest); }
 .navbtn.active svg{ stroke:var(--forest); }
-.navbtn.scanbtn{ position:relative; top:-16px; }
+.navbtn.scanbtn{ position:relative; top:0; }
 .navbtn.scanbtn .scanicon-wrap{
-  width:52px;height:52px;border-radius:50%; background:linear-gradient(160deg, var(--gold), var(--gold-deep));
-  display:flex; align-items:center; justify-content:center; box-shadow:0 8px 18px rgba(140,100,31,0.45);
+  width:34px;height:34px;border-radius:50%; background:linear-gradient(160deg, var(--gold), var(--gold-deep));
+  display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(140,100,31,0.4);
   margin-bottom:2px;
 }
-.navbtn.scanbtn svg{ stroke:#fff; width:24px; height:24px; }
+.navbtn.scanbtn svg{ stroke:#fff; width:17px; height:17px; }
 
 /* ---------- Typography helpers ---------- */
 h1,h2,h3,.display{ font-family:'Fraunces', serif; color:var(--forest); margin:0; }
@@ -1920,7 +1920,23 @@ async function goToScan(){
   const video = document.getElementById('cam-video');
   const offMsg = document.getElementById('camera-off-msg');
   try{
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    // Request the highest resolution the camera supports (up to 4K) — without
+    // these constraints, browsers often default to a low resolution like
+    // 640x480 or 1280x720 even on phones with much better cameras. "ideal"
+    // (not "exact"/"min") lets the browser gracefully use the closest
+    // resolution the hardware actually supports instead of failing outright.
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:'environment',
+          width:{ideal:3840}, height:{ideal:2160}
+        },
+        audio:false
+      });
+    }catch(hqErr){
+      console.warn('High-res camera request failed, falling back to default resolution:', hqErr);
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    }
     video.srcObject = stream;
     video.style.display='block';
     offMsg.style.display='none';
