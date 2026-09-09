@@ -95,6 +95,7 @@ body{
   .statusbar{ display:none; }
   .screens{ padding-top:env(safe-area-inset-top, 16px); }
   .navbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:500;
     height:auto; min-height:70px;
     padding-bottom:env(safe-area-inset-bottom, 10px);
   }
@@ -118,6 +119,7 @@ body{
   .statusbar{ display:none; }
   .screens{ padding-top:env(safe-area-inset-top, 16px); }
   .navbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:500;
     height:auto; min-height:70px;
     padding-bottom:env(safe-area-inset-bottom, 10px);
   }
@@ -237,9 +239,9 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 .empty-state{ text-align:center; padding:40px 30px; color:var(--ink-soft); font-size:13px; }
 
 /* ---------- Detail screen ---------- */
-.detail-hero{ background:linear-gradient(165deg, var(--forest), var(--forest-light)); padding:50px 22px 26px; position:relative; }
-.back-btn{ position:absolute; top:16px; left:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-.save-btn{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.detail-hero{ background:linear-gradient(165deg, var(--forest), var(--forest-light)); position:relative; height:300px; overflow:hidden; padding:0; }
+.back-btn{ position:absolute; top:16px; left:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3; }
+.save-btn{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.14); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3; }
 .save-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2; transition:fill .15s, stroke .15s; }
 .save-btn.saved svg{ fill:var(--gold); stroke:var(--gold); }
 .saved-badge{ position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(30,58,43,0.85); display:flex; align-items:center; justify-content:center; z-index:5; }
@@ -251,12 +253,16 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 .admin-edit-btn{ background:var(--parchment-dark); color:var(--forest); }
 .admin-del-btn{ background:#F7E9DD; color:var(--clay); }
 .back-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2.2; }
-.detail-hero .icon-wrap{ width:120px; height:120px; margin:0 auto; background:rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.18);}
-.detail-hero .icon-wrap svg{ width:74px; height:74px; }
-.detail-hero h2{ color:#fff; text-align:center; margin-top:14px; font-size:23px; }
-.detail-hero .sci{ text-align:center; color:var(--sage-dim); font-style:italic; font-size:13px; margin-top:2px; }
-.detail-hero .taglist{ display:flex; justify-content:center; gap:6px; margin-top:12px; flex-wrap:wrap;}
-.detail-hero .tagpill{ font-size:10.5px; background:rgba(255,255,255,0.14); color:#fff; padding:4px 10px; border-radius:20px; }
+.detail-hero-image{ position:absolute; inset:0; }
+.detail-hero-image img{ width:100%; height:100%; object-fit:cover; display:block; }
+.detail-hero-image svg{ width:100%; height:100%; }
+.detail-hero-scrim{ position:absolute; inset:0; background:linear-gradient(to bottom, rgba(20,36,26,0.05) 0%, rgba(20,36,26,0.35) 55%, rgba(15,28,20,0.92) 100%); z-index:1; }
+.detail-hero-text{ position:absolute; left:0; right:0; bottom:0; padding:18px 22px 22px; z-index:2; }
+.detail-hero h2{ color:#fff; text-align:left; margin-top:0; font-size:24px; }
+.detail-hero .sci{ text-align:left; color:var(--sage-dim); font-style:italic; font-size:13px; margin-top:2px; }
+.detail-hero .taglist{ display:flex; justify-content:flex-start; gap:6px; margin-top:10px; flex-wrap:wrap;}
+.detail-hero .tagpill{ font-size:10.5px; background:rgba(255,255,255,0.18); color:#fff; padding:4px 10px; border-radius:20px; }
+
 
 .detail-body{ padding:20px 22px 10px; }
 .local-names{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 18px;}
@@ -529,16 +535,19 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
     <!-- ============ DETAIL ============ -->
     <div class="screen" id="screen-detail">
       <div class="detail-hero">
+        <div class="detail-hero-image" id="detail-icon"></div>
+        <div class="detail-hero-scrim"></div>
         <button class="back-btn" onclick="goBackFromDetail()">
           <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
         </button>
         <button class="save-btn" id="detail-save-btn" onclick="toggleBookmarkCurrent()">
           <svg viewBox="0 0 24 24" id="detail-save-icon"><path d="M6 4a2 2 0 012-2h8a2 2 0 012 2v17l-6-4-6 4V4z"/></svg>
         </button>
-        <div class="icon-wrap" id="detail-icon"></div>
-        <h2 id="detail-name">—</h2>
-        <div class="sci" id="detail-sci">—</div>
-        <div class="taglist" id="detail-tags"></div>
+        <div class="detail-hero-text">
+          <h2 id="detail-name">—</h2>
+          <div class="sci" id="detail-sci">—</div>
+          <div class="taglist" id="detail-tags"></div>
+        </div>
       </div>
       <div class="detail-body">
         <div class="dblock">
@@ -1045,6 +1054,7 @@ function withTimeout(promise, ms){
 }
 
 function retryFirestoreConnection(){
+  plantsRetryCount = 0;
   setDBStatus('connecting');
   loadPlantsFromFirestore();
   loadEmbeddingsFromFirestore();
@@ -1094,6 +1104,8 @@ async function loadEmbeddingsFromFirestore(){
   }
 }
 
+let plantsRetryCount = 0;
+const MAX_AUTO_RETRIES = 3;
 async function loadPlantsFromFirestore(){
   try{
     const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 12000);
@@ -1105,6 +1117,7 @@ async function loadPlantsFromFirestore(){
     snap.forEach(doc=> cloudPlants.push(doc.data()));
     cloudPlants.sort((a,b)=> a.id - b.id);
     PLANTS = cloudPlants;
+    plantsRetryCount = 0;
     setDBStatus('connected');
     // re-render any screens that depend on PLANTS, now with live cloud data
     renderHome();
@@ -1113,8 +1126,15 @@ async function loadPlantsFromFirestore(){
     renderTrainChips();
     renderTrainList();
   }catch(e){
-    console.warn('Firestore read failed, staying on local data:', e);
-    setDBStatus('error');
+    console.warn('Firestore read failed:', e);
+    if(plantsRetryCount < MAX_AUTO_RETRIES){
+      plantsRetryCount++;
+      const delay = plantsRetryCount * 3000; // 3s, 6s, 9s backoff
+      setDBStatus('connecting');
+      setTimeout(loadPlantsFromFirestore, delay);
+    } else {
+      setDBStatus('error');
+    }
   }
 }
 
@@ -1318,6 +1338,19 @@ function plantVisualHTML(p, size){
     return `<img src="${samples[0].thumb}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:50%;display:block;">`;
   }
   return leafSVG(p.color, size);
+}
+
+/* Large, full-cover version of the plant photo used for the Detail screen hero
+   banner — fills the whole hero area instead of a small circular thumbnail.
+   Falls back to a big centered leaf icon on a themed gradient when no trained
+   photo is available yet for that plant. */
+function heroVisualHTML(p){
+  const samples = trainingData[p.id];
+  if(samples && samples.length>0){
+    return `<img src="${samples[0].thumb}" alt="${p.name}">`;
+  }
+  const pal = LEAF_PALETTES[p.color % LEAF_PALETTES.length];
+  return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg, ${pal[0]}, ${pal[1]});">${leafSVG(p.color, 130)}</div>`;
 }
 
 /* ================= STATE ================= */
@@ -1692,6 +1725,47 @@ function filterLibrary(){
 }
 
 /* ================= VOICE SEARCH ================= */
+/* ---- Fuzzy matching so voice search still finds the right plant even if
+   speech recognition mishears a word (e.g. "Lagundi" heard as "La gundi" or
+   "Lagundy") — compares the transcript against every plant's name and local
+   names using edit-distance similarity, instead of requiring an exact match. */
+function levenshtein(a, b){
+  a = (a||'').toLowerCase(); b = (b||'').toLowerCase();
+  const m = a.length, n = b.length;
+  if(m===0) return n; if(n===0) return m;
+  const dp = Array.from({length:m+1}, ()=> new Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1]===b[j-1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
+}
+function textSimilarity(a, b){
+  const dist = levenshtein(a, b);
+  const maxLen = Math.max(a.length, b.length) || 1;
+  return 1 - dist/maxLen;
+}
+function fuzzyFindPlant(transcript){
+  const words = transcript.toLowerCase().split(/\s+/).filter(Boolean);
+  let best = null, bestScore = 0;
+  PLANTS.forEach(p=>{
+    const candidates = [p.name, ...(p.local||[])];
+    candidates.forEach(cand=>{
+      const wholeScore = textSimilarity(transcript, cand);
+      if(wholeScore > bestScore){ bestScore = wholeScore; best = p; }
+      words.forEach(w=>{
+        const s = textSimilarity(w, cand);
+        if(s > bestScore){ bestScore = s; best = p; }
+      });
+    });
+  });
+  return {plant: best, score: bestScore};
+}
+
 function setupVoice(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const hint = document.getElementById('voice-hint');
@@ -1701,16 +1775,40 @@ function setupVoice(){
     return;
   }
   recognition = new SR();
-  recognition.lang = 'en-PH';
+  recognition.lang = 'fil-PH';
   recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  recognition.maxAlternatives = 5;
   recognition.onresult = (e)=>{
-    const transcript = e.results[0][0].transcript;
-    document.getElementById('search-input').value = transcript;
-    filterLibrary();
-    hint.textContent = `Narinig: "${transcript}"`;
+    // Check every alternative the recognizer offers, and fuzzy-match each one
+    // against the plant database — this tolerates the recognizer mishearing
+    // an unfamiliar Filipino plant name, so the person rarely has to repeat
+    // themselves.
+    const alternatives = Array.from(e.results[0]).map(r=>r.transcript);
+    let overallBest = null, overallScore = 0, topTranscript = alternatives[0];
+    alternatives.forEach(t=>{
+      const {plant, score} = fuzzyFindPlant(t);
+      if(score > overallScore){ overallScore = score; overallBest = plant; }
+    });
+    const FUZZY_THRESHOLD = 0.55;
+    if(overallBest && overallScore >= FUZZY_THRESHOLD){
+      document.getElementById('search-input').value = overallBest.name;
+      filterLibrary();
+      hint.textContent = `Narinig: "${topTranscript}" → Nakita: ${overallBest.name}`;
+    } else {
+      document.getElementById('search-input').value = topTranscript;
+      filterLibrary();
+      hint.textContent = `Narinig: "${topTranscript}"`;
+    }
   };
-  recognition.onerror = ()=>{ hint.textContent = "Hindi na-detect ang boses. Subukan ulit."; stopListening(); };
+  recognition.onerror = (e)=>{
+    // If Filipino recognition isn't supported on this browser/OS, fall back
+    // to English once and let the person try again.
+    if(recognition.lang === 'fil-PH' && (e.error==='language-not-supported' || e.error==='network')){
+      recognition.lang = 'en-PH';
+    }
+    hint.textContent = "Hindi na-detect ang boses. Subukan ulit.";
+    stopListening();
+  };
   recognition.onend = ()=>{ stopListening(); };
 }
 function toggleVoiceSearch(){
@@ -1733,7 +1831,7 @@ function openDetail(id, from){
   if(!p) return;
   currentDetailFrom = from || 'library';
   lastOpenedPlantId = id;
-  document.getElementById('detail-icon').innerHTML = plantVisualHTML(p,110);
+  document.getElementById('detail-icon').innerHTML = heroVisualHTML(p);
   document.getElementById('detail-name').textContent = p.name;
   document.getElementById('detail-sci').textContent = p.sci;
   document.getElementById('detail-tags').innerHTML = `<span class="tagpill">${p.cat}</span>`;
