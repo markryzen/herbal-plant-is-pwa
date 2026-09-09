@@ -661,6 +661,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       </div>
       <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;" onclick="openAdminEditor(null)">+ Magdagdag ng Bagong Halaman</button>
       <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;margin-top:10px;" onclick="showScreen('train'); renderTrainChips(); renderTrainList();">🧠 Buksan ang Train AI</button>
+      <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;margin-top:10px;" onclick="bulkSyncTrainingToFirestore()">☁️ I-sync ang Training Data papunta sa Firestore</button>
       <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:10px;" onclick="exportTrainingData()">⬇️ I-export ang Training Data (backup file)</button>
       <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="document.getElementById('import-training-input').click()">⬆️ I-import ang Training Data mula sa file</button>
       <input type="file" id="import-training-input" accept="application/json" style="display:none;" onchange="importTrainingData(event)">
@@ -1065,7 +1066,11 @@ function retryFirestoreConnection(){
 async function syncEmbeddingToFirestore(plantId, vector, thumb, clientId){
   if(!firestoreConnected) return;
   try{
-    await firestoreDB.collection(EMBEDDINGS_COLLECTION).add({
+    // Using clientId as the document ID (instead of an auto-generated one)
+    // makes this idempotent — re-syncing the same sample (e.g. via the bulk
+    // sync button, or a retried request) overwrites the same document rather
+    // than creating a duplicate, regardless of how many times it runs.
+    await firestoreDB.collection(EMBEDDINGS_COLLECTION).doc(clientId).set({
       plantId: Number(plantId),
       vector,
       thumb,
@@ -1154,6 +1159,62 @@ async function seedFirestore(){
     alert('Tagumpay! Na-upload na ang plant data sa Firestore. Ire-refresh na ang datos.');
     loadPlantsFromFirestore();
   }catch(e){
+    console.error(e);
+    alert('May error sa pag-upload: ' + e.message);
+  }
+}
+
+/* Push every training sample currently loaded on THIS device (e.g. the phone
+   where the actual training happened) into the Firestore "embeddings"
+   collection, in one explicit action. Uses clientId as each document's ID,
+   so running this more than once is always safe — it just overwrites the
+   same documents rather than creating duplicates. This is the reliable way
+   to make one device's training become the shared, database-backed baseline
+   that every other device (and the read-only Scan feature for regular users)
+   can use, without needing per-device training or fragile background sync. */
+async function bulkSyncTrainingToFirestore(){
+  if(!firestoreConnected){
+    alert('Hindi pa naka-connect sa Firestore. Pumunta sa About tab at i-click ang "Ulitin ang Koneksyon" muna, tapos subukan ulit ito.');
+    return;
+  }
+  const allSamples = [];
+  Object.keys(trainingData).forEach(plantIdStr=>{
+    const plantId = Number(plantIdStr);
+    (trainingData[plantId]||[]).forEach(s=>{
+      if(s && s.vector && s.clientId) allSamples.push({plantId, ...s});
+    });
+  });
+  if(allSamples.length===0){ alert('Walang training data sa device na ito para i-sync.'); return; }
+  if(!confirm(`Ia-upload ang ${allSamples.length} training sample mula sa device na ito papunta sa Firestore database. Magpatuloy?`)) return;
+
+  const progressEl = document.getElementById('admin-bulk-progress');
+  try{
+    const CHUNK_SIZE = 400; // stay safely under Firestore's 500-operation batch limit
+    let uploaded = 0;
+    for(let i=0; i<allSamples.length; i+=CHUNK_SIZE){
+      const chunk = allSamples.slice(i, i+CHUNK_SIZE);
+      const batch = firestoreDB.batch();
+      chunk.forEach(s=>{
+        const ref = firestoreDB.collection(EMBEDDINGS_COLLECTION).doc(s.clientId);
+        batch.set(ref, {
+          plantId: s.plantId,
+          vector: s.vector,
+          thumb: s.thumb,
+          clientId: s.clientId,
+          createdAt: Date.now()
+        });
+      });
+      await batch.commit();
+      uploaded += chunk.length;
+      if(progressEl){
+        progressEl.style.display = 'block';
+        progressEl.textContent = `Ina-upload sa Firestore: ${uploaded} / ${allSamples.length}...`;
+      }
+    }
+    if(progressEl){ progressEl.style.display = 'none'; }
+    alert(`Tagumpay! Na-upload ang ${uploaded} training sample papunta sa Firestore database. Available na ito ngayon sa LAHAT ng device.`);
+  }catch(e){
+    if(progressEl){ progressEl.style.display = 'none'; }
     console.error(e);
     alert('May error sa pag-upload: ' + e.message);
   }
@@ -1561,6 +1622,47 @@ function exportTrainingData(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   alert(`Na-export ang training data ng ${totalSamples} larawan mula sa ${Object.keys(trainingData).length} halaman. I-transfer mo ang file na ito papunta sa ibang device (hal. sa pamamagitan ng Google Drive, email, o USB cable), tapos gamitin ang "I-import" button doon.`);
+}
+
+/* ================= BUNDLED STATIC TRAINING DATA =================
+   Loads training-data.json if it exists alongside index.html in the deployed
+   folder. This is the MOST RELIABLE way to make training data available on
+   every device (friends' phones, panelist's laptop, etc.) without depending
+   on Firestore connectivity or requiring each device to be trained/imported
+   individually — it's just a static file served by Netlify like any other
+   asset, so it always loads the same way index.html does.
+   To use: Admin Panel → "⬇️ I-export ang Training Data" on a device with
+   complete/correct training → rename the downloaded file to
+   "training-data.json" → place it in the same folder as index.html → redeploy. */
+async function loadBundledTrainingData(){
+  try{
+    const res = await fetch('./training-data.json', {cache:'no-store'});
+    if(!res.ok) return; // file doesn't exist — that's fine, not required
+    const payload = await res.json();
+    const bundled = payload.trainingData || payload;
+    const existingClientIds = new Set();
+    Object.values(trainingData).forEach(arr=> arr.forEach(s=>{ if(s.clientId) existingClientIds.add(s.clientId); }));
+    Object.keys(bundled).forEach(plantIdStr=>{
+      const plantId = Number(plantIdStr);
+      const samples = bundled[plantIdStr];
+      if(!Array.isArray(samples)) return;
+      if(!trainingData[plantId]) trainingData[plantId] = [];
+      samples.forEach(s=>{
+        if(!s || !s.vector) return;
+        const clientId = s.clientId || makeClientId();
+        if(existingClientIds.has(clientId)) return;
+        existingClientIds.add(clientId);
+        trainingData[plantId].push({vector: s.vector, thumb: s.thumb, clientId});
+      });
+    });
+    trainingDataReady = true;
+    renderTrainList();
+    renderHome();
+    filterLibrary();
+    console.log('Loaded bundled training-data.json successfully.');
+  }catch(e){
+    console.warn('No bundled training-data.json found or failed to load (this is optional):', e);
+  }
 }
 
 async function importTrainingData(evt){
@@ -2279,6 +2381,9 @@ renderLibraryChips();
 filterLibrary();
 setupVoice();
 renderTrainChips();
+// Always try the bundled static training-data.json first — this is the most
+// reliable source since it's just a static file, not a database connection.
+loadBundledTrainingData();
 // Always load local IndexedDB training data first as the reliable baseline —
 // this guarantees training never appears to "disappear" just because Firestore
 // is slow, offline, or fails to connect. Firestore data merges in on top of
