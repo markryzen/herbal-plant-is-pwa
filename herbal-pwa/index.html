@@ -1034,6 +1034,20 @@ function initFirebase(){
   try{
     if(!firebase.apps || firebase.apps.length===0){ firebase.initializeApp(firebaseConfig); }
     firestoreDB = firebase.firestore();
+    // Many mobile carriers (especially in the Philippines) run data-compression
+    // proxies that silently break Firestore's default WebChannel/streaming
+    // connection — this is a very common cause of "stuck on Connecting..." on
+    // mobile data specifically, even when the same WiFi network works fine.
+    // Forcing long-polling is Firestore's own documented workaround: it's
+    // slightly slower per-request but works through almost any proxy/firewall.
+    try{
+      firestoreDB.settings({
+        experimentalAutoDetectLongPolling: true,
+        useFetchStreams: false
+      });
+    }catch(settingsErr){
+      console.warn('Could not apply Firestore long-polling settings (safe to ignore if already set):', settingsErr);
+    }
     firestoreConnected = true;
     setDBStatus('connecting');
     loadPlantsFromFirestore();
