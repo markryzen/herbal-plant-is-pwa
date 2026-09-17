@@ -406,9 +406,14 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 
     <!-- ============ HOME ============ -->
     <div class="screen active" id="screen-home">
-      <div class="home-header">
-        <div class="greet">Magandang araw! 🌿</div>
-        <h1>Kilalanin ang <span class="accent">halamang gamot</span> sa paligid mo.</h1>
+      <div class="home-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="greet">Magandang araw! 🌿</div>
+          <h1>Kilalanin ang <span class="accent">halamang gamot</span> sa paligid mo.</h1>
+        </div>
+        <button onclick="showScreen('account')" style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:var(--parchment-dark);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" style="stroke:var(--forest);fill:none;stroke-width:2;"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </button>
       </div>
 
       <div class="hero">
@@ -577,6 +582,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <div class="dblock">
           <div class="caution-box" id="detail-caution">—</div>
         </div>
+        <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-bottom:20px;" onclick="downloadPlantInfo()">⬇️ I-download ang Impormasyon</button>
       </div>
     </div>
 
@@ -602,6 +608,51 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       <div class="train-list" id="train-list"></div>
       <button class="reset-ai-btn" onclick="resetTrainingData()">I-reset ang lahat ng training data</button>
       <input type="file" id="train-file-input" accept="image/*" multiple style="display:none;" onchange="handleTrainUpload(event)">
+    </div>
+
+    <!-- ============ ACCOUNT (Login / Profile) ============ -->
+    <div class="screen" id="screen-account">
+      <div class="lib-header">
+        <button class="back-btn" style="position:static;background:var(--parchment-dark);margin-bottom:10px;" onclick="showScreen('home')">
+          <svg viewBox="0 0 24 24" style="stroke:var(--forest);"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="eyebrow">Account</div>
+        <h1 style="font-size:22px;">Ikaw</h1>
+      </div>
+
+      <!-- Shown when NOT logged in -->
+      <div id="account-guest-view" style="padding:0 20px;">
+        <div class="train-note">Mag-login o gumawa ng account para ma-save ang iyong mga paboritong halaman at makita ang history ng iyong mga scan, kahit saang device.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+          <label class="admin-label">Email<input type="email" id="auth-email" class="admin-input" placeholder="you@example.com"></label>
+          <label class="admin-label">Password<input type="password" id="auth-password" class="admin-input" placeholder="Hindi bababa sa 6 characters"></label>
+        </div>
+        <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:14px;" onclick="doLogin()">Mag-login</button>
+        <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="doRegister()">Gumawa ng Bagong Account</button>
+        <div id="auth-error" style="color:var(--clay);font-size:12px;margin-top:10px;text-align:center;"></div>
+      </div>
+
+      <!-- Shown when logged in -->
+      <div id="account-profile-view" style="padding:0 20px;display:none;">
+        <div class="train-note">
+          Naka-login bilang: <strong id="account-email-display">—</strong>
+        </div>
+        <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:14px;" onclick="showScreen('history')">🕓 Tingnan ang History ng Scan</button>
+        <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;margin-top:10px;" onclick="showSavedInLibrary()">❤ Tingnan ang mga Na-save na Halaman</button>
+        <button class="reset-ai-btn" style="background:#F7E9DD;color:var(--clay);border:none;margin-top:10px;" onclick="doLogout()">Mag-logout</button>
+      </div>
+    </div>
+
+    <!-- ============ HISTORY ============ -->
+    <div class="screen" id="screen-history">
+      <div class="lib-header">
+        <button class="back-btn" style="position:static;background:var(--parchment-dark);margin-bottom:10px;" onclick="showScreen('account')">
+          <svg viewBox="0 0 24 24" style="stroke:var(--forest);"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="eyebrow">Iyong Aktibidad</div>
+        <h1 style="font-size:22px;">History ng Scan</h1>
+      </div>
+      <div class="train-list" id="history-list" style="padding:14px 20px;"></div>
     </div>
 
     <!-- ============ ABOUT ============ -->
@@ -666,6 +717,11 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="document.getElementById('import-training-input').click()">⬆️ I-import ang Training Data mula sa file</button>
       <input type="file" id="import-training-input" accept="application/json" style="display:none;" onchange="importTrainingData(event)">
       <div id="admin-bulk-progress" style="display:none;margin:10px 20px 0;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--forest);font-weight:700;text-align:center;"></div>
+      <div class="searchbar" style="margin-top:16px;">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="admin-search-input" placeholder="Hanapin ang halaman..." oninput="renderAdminList()">
+      </div>
+      <div class="chiprow" id="admin-chips" style="margin:10px 0 0;"></div>
       <div class="train-list" id="admin-list" style="padding-top:6px;"></div>
     </div>
 
@@ -690,6 +746,15 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
           <label class="admin-label">Paraan ng Paggamit<textarea id="admin-f-prep" class="admin-input" rows="2"></textarea></label>
           <label class="admin-label">Paalala/Caution<textarea id="admin-f-caution" class="admin-input" rows="2"></textarea></label>
         </div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+          <div class="admin-label" style="margin-bottom:8px;">🧠 AI Training Photos <span id="admin-f-sample-count" style="font-weight:400;color:var(--ink-soft);">(0 samples)</span></div>
+          <div class="thumbs" id="admin-f-thumbs" style="margin-bottom:8px;"></div>
+          <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;" onclick="document.getElementById('admin-f-photos-input').click()">📷 Magdagdag ng Larawan (para sa pagkilala)</button>
+          <input type="file" id="admin-f-photos-input" accept="image/*" multiple style="display:none;" onchange="handleAdminPhotoUpload(event)">
+          <div id="admin-f-photo-progress" style="display:none;margin-top:8px;font-size:11.5px;color:var(--forest);font-weight:700;text-align:center;"></div>
+        </div>
+
         <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:16px;" onclick="saveAdminPlant()">I-save</button>
       </div>
     </div>
@@ -721,6 +786,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 <!-- Firebase (Firestore) — cloud database for the Plant Information collection -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
 
 <script>
 /* ================= PLANT DATABASE ================= */
@@ -1024,6 +1090,8 @@ let firestoreDB = null;
 let firestoreConnected = false;
 const PLANTS_COLLECTION = "plants";
 const EMBEDDINGS_COLLECTION = "embeddings";
+const USERS_COLLECTION = "users";
+let currentUser = null; // Firebase Auth user object, or null if not logged in
 
 function isFirebaseConfigured(){
   return firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -1052,6 +1120,19 @@ function initFirebase(){
     setDBStatus('connecting');
     loadPlantsFromFirestore();
     loadEmbeddingsFromFirestore();
+
+    // Auth state observer — fires on load (restoring a previous session) and
+    // whenever the person logs in/out. Drives which Account view is shown and
+    // which data source (Firestore per-user vs local device) bookmarks use.
+    if(firebase.auth){
+      firebase.auth().onAuthStateChanged((user)=>{
+        currentUser = user;
+        updateAccountUI();
+        if(user){
+          loadUserBookmarksFromFirestore();
+        }
+      });
+    }
   }catch(e){
     console.warn('Firebase init failed:', e);
     setDBStatus('error');
@@ -1241,42 +1322,66 @@ async function bulkSyncTrainingToFirestore(){
    recommendations) before exposing write access publicly. */
 const ADMIN_PASSWORD = "herbal2026";
 let adminEditingId = null;
+let adminActiveCat = 'All';
 
 function adminLogin(){
   const pw = prompt('Ilagay ang Admin Password:');
   if(pw === null) return;
   if(pw === ADMIN_PASSWORD){
     showScreen('admin');
+    renderAdminChips();
     renderAdminList();
   } else {
     alert('Maling password.');
   }
 }
 
+function renderAdminChips(){
+  const el = document.getElementById('admin-chips');
+  if(!el) return;
+  el.innerHTML = CATEGORIES.map(c=>`<button class="chip ${c===adminActiveCat?'active':''}" onclick="selectAdminChip('${c}')">${c}</button>`).join('');
+}
+function selectAdminChip(cat){ adminActiveCat = cat; renderAdminChips(); renderAdminList(); }
+
 function renderAdminList(){
   const list = document.getElementById('admin-list');
   if(!list) return;
-  list.innerHTML = PLANTS.map(p=>`
+  const q = (document.getElementById('admin-search-input')?.value || '').trim().toLowerCase();
+  const filtered = PLANTS.filter(p=>{
+    const matchesCat = adminActiveCat==='All' || p.cat===adminActiveCat;
+    const matchesQ = !q || p.name.toLowerCase().includes(q) || p.sci.toLowerCase().includes(q) || p.local.join(' ').toLowerCase().includes(q);
+    return matchesCat && matchesQ;
+  });
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty-state">Walang nahanap na halaman.</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(p=>{
+    const sampleCount = (trainingData[p.id]||[]).length;
+    return `
     <div class="train-item">
       <div class="icon-wrap">${plantVisualHTML(p,44)}</div>
       <div class="info" style="flex:1;">
         <div class="n">${p.name}</div>
-        <div class="samples">${p.cat}</div>
+        <div class="samples ${sampleCount>0?'has-data':''}">${p.cat} · ${sampleCount} training photo${sampleCount===1?'':'s'}</div>
         <div class="admin-item-row" style="margin-top:8px;">
           <button class="admin-edit-btn" onclick="openAdminEditor(${p.id})">Edit</button>
           <button class="admin-del-btn" onclick="deleteAdminPlant(${p.id})">Burahin</button>
         </div>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 function openAdminEditor(id){
-  adminEditingId = id;
   const catSelect = document.getElementById('admin-f-cat');
   catSelect.innerHTML = CATEGORIES.filter(c=>c!=='All').map(c=>`<option value="${c}">${c}</option>`).join('');
 
   if(id === null){
+    // Assign the ID up front (even though the plant record isn't saved yet)
+    // so that AI training photos added in this same form have somewhere to
+    // attach to right away.
+    adminEditingId = Math.max(0, ...PLANTS.map(p=>p.id)) + 1;
     document.getElementById('admin-editor-title').textContent = 'Magdagdag ng Bagong Halaman';
     document.getElementById('admin-f-name').value = '';
     document.getElementById('admin-f-sci').value = '';
@@ -1289,6 +1394,7 @@ function openAdminEditor(id){
     document.getElementById('admin-f-prep').value = '';
     document.getElementById('admin-f-caution').value = '';
   } else {
+    adminEditingId = id;
     const p = PLANTS.find(x=>x.id===id);
     if(!p) return;
     document.getElementById('admin-editor-title').textContent = 'Mag-edit: ' + p.name;
@@ -1303,7 +1409,51 @@ function openAdminEditor(id){
     document.getElementById('admin-f-prep').value = p.prep;
     document.getElementById('admin-f-caution').value = p.caution;
   }
+  renderAdminEditorThumbs();
   document.getElementById('admin-editor-overlay').style.display = 'flex';
+}
+
+function renderAdminEditorThumbs(){
+  const samples = trainingData[adminEditingId] || [];
+  const thumbsEl = document.getElementById('admin-f-thumbs');
+  const countEl = document.getElementById('admin-f-sample-count');
+  if(thumbsEl) thumbsEl.innerHTML = samples.slice(0,8).map(s=>`<img src="${s.thumb}">`).join('');
+  if(countEl) countEl.textContent = `(${samples.length} sample${samples.length===1?'':'s'})`;
+}
+
+async function handleAdminPhotoUpload(evt){
+  const files = Array.from(evt.target.files || []);
+  evt.target.value = '';
+  if(files.length===0 || adminEditingId==null) return;
+  const ok = await waitForAIModel();
+  if(!ok){ alert('Hindi ma-load ang AI model. Suriin ang internet connection mo at i-reload ang app.'); return; }
+  const progressEl = document.getElementById('admin-f-photo-progress');
+  const plantId = adminEditingId;
+  let added = 0;
+  for(let i=0;i<files.length;i++){
+    if(progressEl){ progressEl.style.display='block'; progressEl.textContent = `Nagpoproseso ${i+1}/${files.length}...`; }
+    try{
+      const dataUrl = await readFileAsDataURL(files[i]);
+      const img = await loadImageFromSrc(dataUrl);
+      const vector = computeEmbeddingFromElement(img);
+      if(!vector) continue;
+      const tc = document.createElement('canvas');
+      tc.width = 220; tc.height = 220;
+      tc.getContext('2d').drawImage(img,0,0,220,220);
+      const thumb = tc.toDataURL('image/jpeg', 0.7);
+      const clientId = makeClientId();
+      await dbAddEmbedding(plantId, vector, thumb, clientId);
+      syncEmbeddingToFirestore(plantId, vector, thumb, clientId);
+      if(!trainingData[plantId]) trainingData[plantId] = [];
+      trainingData[plantId].push({vector, thumb, clientId});
+      added++;
+    }catch(e){ console.warn('Failed to process admin photo:', e); }
+    await new Promise(r=>setTimeout(r,120));
+  }
+  if(progressEl) progressEl.style.display = 'none';
+  renderAdminEditorThumbs();
+  renderTrainList();
+  if(added>0) alert(`Naidagdag ang ${added} larawan para sa pagkilala ng halamang ito.`);
 }
 
 function closeAdminEditor(){
@@ -1314,7 +1464,7 @@ function closeAdminEditor(){
 async function saveAdminPlant(){
   const name = document.getElementById('admin-f-name').value.trim();
   if(!name){ alert('Kailangan ng pangalan ng halaman.'); return; }
-  const id = adminEditingId===null ? (Math.max(0,...PLANTS.map(p=>p.id)) + 1) : adminEditingId;
+  const id = adminEditingId;
   const existing = PLANTS.find(p=>p.id===id);
   const plant = {
     id,
@@ -1432,8 +1582,9 @@ function heroVisualHTML(p){
 let currentDetailFrom = 'library';
 
 /* ================= BOOKMARKS (saved plants) =================
-   Stored locally per device via localStorage — this is a personal user
-   preference (not shared data), so it does not need to live in Firestore. */
+   Guests: stored locally via localStorage (per device).
+   Logged-in users: stored in Firestore under users/{uid}, so saved plants
+   follow the account across devices instead of being tied to one phone. */
 const BOOKMARKS_KEY = 'herbalIS_bookmarks';
 let bookmarkedIds = new Set();
 function loadBookmarksFromStorage(){
@@ -1445,11 +1596,34 @@ function loadBookmarksFromStorage(){
 function saveBookmarksToStorage(){
   try{ localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...bookmarkedIds])); }catch(e){}
 }
+async function loadUserBookmarksFromFirestore(){
+  if(!currentUser || !firestoreConnected) return;
+  try{
+    const doc = await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid).get();
+    const cloudIds = (doc.exists && Array.isArray(doc.data().bookmarks)) ? doc.data().bookmarks : [];
+    // Merge any guest bookmarks made before logging in, so nothing is lost.
+    const merged = new Set([...cloudIds, ...bookmarkedIds]);
+    bookmarkedIds = merged;
+    await saveUserBookmarksToFirestore();
+    renderHome();
+    filterLibrary();
+  }catch(e){ console.warn('Could not load user bookmarks:', e); }
+}
+async function saveUserBookmarksToFirestore(){
+  if(!currentUser || !firestoreConnected) return;
+  try{
+    await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid).set({
+      bookmarks: [...bookmarkedIds],
+      email: currentUser.email
+    }, {merge:true});
+  }catch(e){ console.warn('Could not save user bookmarks:', e); }
+}
 function isBookmarked(id){ return bookmarkedIds.has(id); }
 function toggleBookmark(id){
   if(bookmarkedIds.has(id)) bookmarkedIds.delete(id);
   else bookmarkedIds.add(id);
-  saveBookmarksToStorage();
+  if(currentUser){ saveUserBookmarksToFirestore(); }
+  else { saveBookmarksToStorage(); }
   renderHome();
   filterLibrary();
 }
@@ -1464,6 +1638,122 @@ function updateSaveButtonUI(id){
   if(isBookmarked(id)) btn.classList.add('saved');
   else btn.classList.remove('saved');
 }
+
+/* ================= AUTHENTICATION (Firebase Auth) ================= */
+function updateAccountUI(){
+  const guestView = document.getElementById('account-guest-view');
+  const profileView = document.getElementById('account-profile-view');
+  if(!guestView || !profileView) return;
+  if(currentUser){
+    guestView.style.display = 'none';
+    profileView.style.display = 'block';
+    document.getElementById('account-email-display').textContent = currentUser.email;
+  } else {
+    guestView.style.display = 'block';
+    profileView.style.display = 'none';
+  }
+}
+function showAuthError(msg){
+  const el = document.getElementById('auth-error');
+  if(el) el.textContent = msg;
+}
+async function doRegister(){
+  showAuthError('');
+  const email = document.getElementById('auth-email').value.trim();
+  const pw = document.getElementById('auth-password').value;
+  if(!email || !pw){ showAuthError('Kailangan ng email at password.'); return; }
+  if(pw.length < 6){ showAuthError('Dapat hindi bababa sa 6 characters ang password.'); return; }
+  if(!firestoreConnected || !firebase.auth){ showAuthError('Hindi pa naka-connect sa Firebase. Subukan ulit mamaya.'); return; }
+  try{
+    await firebase.auth().createUserWithEmailAndPassword(email, pw);
+    showScreen('home');
+  }catch(e){
+    showAuthError(authErrorToTagalog(e));
+  }
+}
+async function doLogin(){
+  showAuthError('');
+  const email = document.getElementById('auth-email').value.trim();
+  const pw = document.getElementById('auth-password').value;
+  if(!email || !pw){ showAuthError('Kailangan ng email at password.'); return; }
+  if(!firestoreConnected || !firebase.auth){ showAuthError('Hindi pa naka-connect sa Firebase. Subukan ulit mamaya.'); return; }
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pw);
+    showScreen('home');
+  }catch(e){
+    showAuthError(authErrorToTagalog(e));
+  }
+}
+function doLogout(){
+  if(firebase.auth) firebase.auth().signOut();
+  bookmarkedIds = new Set();
+  loadBookmarksFromStorage();
+  renderHome();
+  filterLibrary();
+  showScreen('home');
+}
+function authErrorToTagalog(e){
+  const code = e.code || '';
+  if(code.includes('email-already-in-use')) return 'May account na gamit ang email na ito. Mag-login na lang.';
+  if(code.includes('invalid-email')) return 'Hindi tamang format ng email.';
+  if(code.includes('weak-password')) return 'Masyadong simple ang password (min. 6 characters).';
+  if(code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return 'Mali ang email o password.';
+  return 'May error: ' + (e.message || 'hindi kilalang error.');
+}
+
+/* ================= SCAN HISTORY (per logged-in user) ================= */
+async function logScanHistory(plant, confidence, mode){
+  if(!currentUser || !firestoreConnected) return;
+  try{
+    await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid)
+      .collection('history').add({
+        plantId: plant.id,
+        plantName: plant.name,
+        confidence,
+        mode,
+        timestamp: Date.now()
+      });
+  }catch(e){ console.warn('Could not log scan history:', e); }
+}
+async function renderHistory(){
+  const list = document.getElementById('history-list');
+  if(!list) return;
+  if(!currentUser){
+    list.innerHTML = '<div class="empty-state">Mag-login muna para makita ang history mo.</div>';
+    return;
+  }
+  if(!firestoreConnected){
+    list.innerHTML = '<div class="empty-state">Hindi pa naka-connect sa database. Subukan ulit mamaya.</div>';
+    return;
+  }
+  list.innerHTML = '<div class="empty-state">Naglo-load...</div>';
+  try{
+    const snap = await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid)
+      .collection('history').orderBy('timestamp','desc').limit(50).get();
+    if(snap.empty){
+      list.innerHTML = '<div class="empty-state">Wala ka pang history ng scan. Mag-scan muna ng halaman!</div>';
+      return;
+    }
+    const rows = [];
+    snap.forEach(doc=>{
+      const h = doc.data();
+      const p = PLANTS.find(x=>x.id===h.plantId);
+      const dateStr = new Date(h.timestamp).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      rows.push(`<div class="train-item" ${p ? `onclick="openDetail(${p.id},'history')" style="cursor:pointer;"` : ''}>
+        <div class="icon-wrap">${p ? plantVisualHTML(p,44) : leafSVG(0,44)}</div>
+        <div class="info">
+          <div class="n">${h.plantName}</div>
+          <div class="samples">${dateStr} · ${h.confidence}% · ${h.mode==='real'?'AI Match':'Demo Mode'}</div>
+        </div>
+      </div>`);
+    });
+    list.innerHTML = rows.join('');
+  }catch(e){
+    console.warn(e);
+    list.innerHTML = '<div class="empty-state">May error sa pag-load ng history.</div>';
+  }
+}
+
 function renderSavedSection(){
   const wrap = document.getElementById('home-saved-section');
   const carousel = document.getElementById('home-saved-carousel');
@@ -1786,6 +2076,8 @@ function showScreen(name){
   const navBtn = document.querySelector(`.navbtn[data-screen="${name}"]`);
   if(navBtn) navBtn.classList.add('active');
   if(name!=='scan') stopCamera();
+  if(name==='history') renderHistory();
+  if(name==='account') updateAccountUI();
 }
 
 function goBackFromDetail(){ showScreen(currentDetailFrom); }
@@ -1960,6 +2252,41 @@ function openDetail(id, from){
   document.getElementById('detail-caution').innerHTML = `<strong>Paalala:</strong> ${p.caution}`;
   updateSaveButtonUI(id);
   showScreen('detail');
+}
+
+/* Lets the person download a plant's full info as a plain text file — no
+   server or special library needed, just a Blob + temporary download link. */
+function downloadPlantInfo(){
+  const p = PLANTS.find(x=>x.id===lastOpenedPlantId);
+  if(!p) return;
+  const lines = [
+    `${p.name} (${p.sci})`,
+    `Kategorya: ${p.cat}`,
+    `Ibang Tawag: ${p.local.join(', ')}`,
+    '',
+    'DESKRIPSYON', p.desc,
+    '',
+    'GINAGAMIT NA BAHAGI', p.parts,
+    '',
+    'MEDISINAL NA GAMIT', ...p.uses.map(u=>'- '+u),
+    '',
+    'BENEPISYO', ...p.benefits.map(b=>'- '+b),
+    '',
+    'PARAAN NG PAGGAMIT', p.prep,
+    '',
+    'PAALALA', p.caution,
+    '',
+    '— Herbal Plant Identification & Information System'
+  ];
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${p.name.replace(/\s+/g,'_')}_info.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /* ================= TRAIN AI SCREEN ================= */
@@ -2342,6 +2669,7 @@ function pickPlantFromImageDemo(canvas){
 
 function showResult(plant, confidence, mode, alts, lowConfidence){
   lastMatchedPlant = plant;
+  logScanHistory(plant, confidence, mode);
   document.getElementById('result-icon').innerHTML = plantVisualHTML(plant,100);
   document.getElementById('result-name').textContent = plant.name;
   document.getElementById('result-sci').textContent = plant.sci;
