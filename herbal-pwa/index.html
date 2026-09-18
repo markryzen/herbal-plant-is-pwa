@@ -1117,7 +1117,11 @@ function initFirebase(){
     // slightly slower per-request but works through almost any proxy/firewall.
     try{
       firestoreDB.settings({
-        experimentalAutoDetectLongPolling: true,
+        // Switched from "auto-detect" to force long-polling directly — on
+        // some PH mobile-data/hotspot setups the auto-detect heuristic
+        // guesses wrong and still tries the normal streaming connection,
+        // which then hangs until it times out. Forcing it skips that guess.
+        experimentalForceLongPolling: true,
         useFetchStreams: false,
         merge: true
       });
@@ -1207,7 +1211,7 @@ async function syncEmbeddingToFirestore(plantId, vector, thumb, clientId){
    Firestore fetch must never erase samples that are only local so far. */
 async function loadEmbeddingsFromFirestore(){
   try{
-    const snap = await withTimeout(firestoreDB.collection(EMBEDDINGS_COLLECTION).get(), 12000);
+    const snap = await withTimeout(firestoreDB.collection(EMBEDDINGS_COLLECTION).get(), 20000);
     if(snap.empty) return;
     const knownClientIds = new Set();
     Object.values(trainingData).forEach(arr=> arr.forEach(s=>{ if(s.clientId) knownClientIds.add(s.clientId); }));
@@ -1230,7 +1234,7 @@ let plantsRetryCount = 0;
 const MAX_AUTO_RETRIES = 3;
 async function loadPlantsFromFirestore(){
   try{
-    const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 12000);
+    const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 20000);
     if(snap.empty){
       setDBStatus('empty');
       return;
@@ -1787,7 +1791,7 @@ async function renderHistory(){
   }
 
   try{
-    const snap = await withTimeout(historyQuery.get({source:'server'}), 12000);
+    const snap = await withTimeout(historyQuery.get({source:"server"}), 20000);
     if(snap.empty){
       list.innerHTML = '<div class="empty-state">Wala ka pang history ng scan. Mag-scan muna ng halaman!</div>';
       return;
