@@ -1119,7 +1119,9 @@ function initFirebase(){
     firestoreConnected = true;
     setDBStatus('connecting');
     loadPlantsFromFirestore();
-    loadEmbeddingsFromFirestore();
+    // loadEmbeddingsFromFirestore() is heavy (full collection, vectors +
+    // thumbnails) and is intentionally deferred — see startHeavyBackgroundLoads().
+    if(heavyLoadsStarted) loadEmbeddingsFromFirestore();
 
     // Auth state observer — fires on load (restoring a previous session) and
     // whenever the person logs in/out. Drives which Account view is shown and
@@ -1940,7 +1942,10 @@ function exportTrainingData(){
    "training-data.json" → place it in the same folder as index.html → redeploy. */
 async function loadBundledTrainingData(){
   try{
-    const res = await fetch('./training-data.json', {cache:'no-store'});
+    // No {cache:'no-store'} here on purpose — the service worker now caches
+    // this file itself (stale-while-revalidate), so repeat visits load it
+    // instantly from Cache Storage instead of re-downloading ~13MB.
+    const res = await fetch('./training-data.json');
     if(!res.ok) return; // file doesn't exist — that's fine, not required
     const payload = await res.json();
     const bundled = payload.trainingData || payload;
@@ -2456,6 +2461,7 @@ async function resetTrainingData(){
 /* ================= SCAN / CAMERA ================= */
 async function goToScan(){
   showScreen('scan');
+  startHeavyBackgroundLoads(); // in case idle callback hasn't fired yet
   resetScanUI();
   const wrap = document.getElementById('camera-wrap');
   const video = document.getElementById('cam-video');
@@ -2723,15 +2729,44 @@ renderLibraryChips();
 filterLibrary();
 setupVoice();
 renderTrainChips();
-// Always try the bundled static training-data.json first — this is the most
-// reliable source since it's just a static file, not a database connection.
-loadBundledTrainingData();
-// Always load local IndexedDB training data first as the reliable baseline —
-// this guarantees training never appears to "disappear" just because Firestore
-// is slow, offline, or fails to connect. Firestore data merges in on top of
-// this without duplicating, using each sample's clientId to dedupe.
-loadTrainingDataFromDB();
-loadAIModel();
+
+/* ---------------------------------------------------------------------
+   PERFORMANCE: the AI training data (bundled training-data.json ~13MB,
+   the Firestore "embeddings" collection, and the MobileNet model itself)
+   are only needed once the person actually opens the Scan tab — but they
+   used to all fire immediately on page load, competing for bandwidth with
+   everything else (including the History query) and making the whole app
+   feel slow, especially on mobile data.
+   Now they're deferred: they load in the background once the browser is
+   idle (so Home/Library/History are never blocked by them), but
+   goToScan() also calls this immediately in case someone taps Scan before
+   the idle callback has fired, so scanning still works right away. The
+   guard flag makes it safe to call from both places. --------------------- */
+let heavyLoadsStarted = false;
+function startHeavyBackgroundLoads(){
+  if(heavyLoadsStarted) return;
+  heavyLoadsStarted = true;
+  // Always load local IndexedDB training data first as the reliable baseline —
+  // this guarantees training never appears to "disappear" just because Firestore
+  // is slow, offline, or fails to connect. Firestore/static data merges in on
+  // top of this without duplicating, using each sample's clientId to dedupe.
+  loadTrainingDataFromDB();
+  // Bundled static training-data.json — most reliable source, but ~13MB.
+  loadBundledTrainingData();
+  // Full Firestore embeddings collection — same purpose as the bundled file
+  // (kept for multi-device training sync), also heavy. Only fetch it once
+  // Firestore is actually connected.
+  if(firestoreConnected) loadEmbeddingsFromFirestore();
+  loadAIModel();
+}
+if('requestIdleCallback' in window){
+  requestIdleCallback(startHeavyBackgroundLoads, {timeout: 4000});
+}else{
+  setTimeout(startHeavyBackgroundLoads, 2000);
+}
+
+// Plant records (names/descriptions/etc.) are small — load these right away
+// so Home/Library/History all have real data as soon as possible.
 initFirebase();
 
 /* ================= PWA: service worker + install prompt ================= */
