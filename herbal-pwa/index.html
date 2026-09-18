@@ -1118,7 +1118,8 @@ function initFirebase(){
     try{
       firestoreDB.settings({
         experimentalAutoDetectLongPolling: true,
-        useFetchStreams: false
+        useFetchStreams: false,
+        merge: true
       });
     }catch(settingsErr){
       console.warn('Could not apply Firestore long-polling settings (safe to ignore if already set):', settingsErr);
