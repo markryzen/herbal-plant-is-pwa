@@ -1102,6 +1102,19 @@ function initFirebase(){
   try{
     if(!firebase.apps || firebase.apps.length===0){ firebase.initializeApp(firebaseConfig); }
     firestoreDB = firebase.firestore();
+    // Enable offline persistence (local IndexedDB cache) so repeat reads —
+    // especially the History screen — can render instantly from cache while
+    // Firestore quietly syncs the latest data in the background, instead of
+    // always waiting on a full network round-trip (which is extra slow here
+    // because of the long-polling workaround below). Safe to ignore if it
+    // fails (e.g. multiple tabs open without sync support, private browsing).
+    try{
+      firestoreDB.enablePersistence({synchronizeTabs:true}).catch((persistErr)=>{
+        console.warn('Firestore offline persistence not enabled:', persistErr.code || persistErr);
+      });
+    }catch(persistErr){
+      console.warn('enablePersistence threw synchronously:', persistErr);
+    }
     // Many mobile carriers (especially in the Philippines) run data-compression
     // proxies that silently break Firestore's default WebChannel/streaming
     // connection — this is a very common cause of "stuck on Connecting..." on
@@ -1717,6 +1730,24 @@ async function logScanHistory(plant, confidence, mode){
       });
   }catch(e){ console.warn('Could not log scan history:', e); }
 }
+function renderHistoryRows(snap){
+  const list = document.getElementById('history-list');
+  if(!list) return;
+  const rows = [];
+  snap.forEach(doc=>{
+    const h = doc.data();
+    const p = PLANTS.find(x=>x.id===h.plantId);
+    const dateStr = new Date(h.timestamp).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+    rows.push(`<div class="train-item" ${p ? `onclick="openDetail(${p.id},'history')" style="cursor:pointer;"` : ''}>
+      <div class="icon-wrap">${p ? plantVisualHTML(p,44) : leafSVG(0,44)}</div>
+      <div class="info">
+        <div class="n">${h.plantName}</div>
+        <div class="samples">${dateStr} · ${h.confidence}% · ${h.mode==='real'?'AI Match':'Demo Mode'}</div>
+      </div>
+    </div>`);
+  });
+  list.innerHTML = rows.join('');
+}
 async function renderHistory(){
   const list = document.getElementById('history-list');
   if(!list) return;
@@ -1728,31 +1759,40 @@ async function renderHistory(){
     list.innerHTML = '<div class="empty-state">Hindi pa naka-connect sa database. Subukan ulit mamaya.</div>';
     return;
   }
-  list.innerHTML = '<div class="empty-state">Naglo-load...</div>';
+  const historyQuery = firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid)
+    .collection('history').orderBy('timestamp','desc').limit(50);
+
+  // Stale-while-revalidate: try an instant local-cache read first (from
+  // enablePersistence above) so History can render immediately on repeat
+  // visits, then always follow up with a real server read in the background
+  // to make sure what's shown is actually up to date.
+  let shownFromCache = false;
   try{
-    const snap = await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid)
-      .collection('history').orderBy('timestamp','desc').limit(50).get();
+    const cacheSnap = await historyQuery.get({source:'cache'});
+    if(!cacheSnap.empty){
+      renderHistoryRows(cacheSnap);
+      shownFromCache = true;
+    }
+  }catch(cacheErr){ /* nothing cached yet — normal on first-ever visit */ }
+
+  if(!shownFromCache){
+    list.innerHTML = '<div class="empty-state">Naglo-load...</div>';
+  }
+
+  try{
+    const snap = await withTimeout(historyQuery.get({source:'server'}), 12000);
     if(snap.empty){
       list.innerHTML = '<div class="empty-state">Wala ka pang history ng scan. Mag-scan muna ng halaman!</div>';
       return;
     }
-    const rows = [];
-    snap.forEach(doc=>{
-      const h = doc.data();
-      const p = PLANTS.find(x=>x.id===h.plantId);
-      const dateStr = new Date(h.timestamp).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-      rows.push(`<div class="train-item" ${p ? `onclick="openDetail(${p.id},'history')" style="cursor:pointer;"` : ''}>
-        <div class="icon-wrap">${p ? plantVisualHTML(p,44) : leafSVG(0,44)}</div>
-        <div class="info">
-          <div class="n">${h.plantName}</div>
-          <div class="samples">${dateStr} · ${h.confidence}% · ${h.mode==='real'?'AI Match':'Demo Mode'}</div>
-        </div>
-      </div>`);
-    });
-    list.innerHTML = rows.join('');
+    renderHistoryRows(snap);
   }catch(e){
     console.warn(e);
-    list.innerHTML = '<div class="empty-state">May error sa pag-load ng history.</div>';
+    // If we already have a cached version on screen, leave it up rather than
+    // replacing it with an error message just because the background refresh failed.
+    if(!shownFromCache){
+      list.innerHTML = '<div class="empty-state">May error sa pag-load ng history.</div>';
+    }
   }
 }
 
