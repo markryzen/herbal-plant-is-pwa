@@ -530,6 +530,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
             <button class="btn-secondary" onclick="goToScan()">Ulitin ang Scan</button>
             <button class="btn-primary" id="result-view-btn">Tingnan ang Detalye</button>
           </div>
+          <button class="reset-ai-btn" style="margin-top:10px; width:100%;" onclick="startCompareScan()">🔍 I-compare sa Isa Pang Halaman</button>
         </div>
         <div class="result-card" id="result-not-herbal-card" style="display:none; text-align:center;">
           <div style="font-size:44px; margin-bottom:10px;">🌿❓</div>
@@ -550,6 +551,24 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <div class="alt-matches">
           <h4>Ibang posibleng tugma</h4>
           <div id="alt-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ COMPARE (two scanned plants side-by-side) ============ -->
+    <div class="screen" id="screen-compare">
+      <div class="result-wrap">
+        <div class="result-badge">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          Paghahambing ng Dalawang Halaman
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="result-card" style="flex:1; padding:14px 10px;" id="compare-card-1"></div>
+          <div class="result-card" style="flex:1; padding:14px 10px;" id="compare-card-2"></div>
+        </div>
+        <div class="result-actions" style="margin-top:16px;">
+          <button class="btn-secondary" onclick="showScreen('library')">Tapusin</button>
+          <button class="btn-primary" onclick="startCompareScan()">I-compare Ulit</button>
         </div>
       </div>
     </div>
@@ -1793,13 +1812,20 @@ async function loadUserBookmarksFromFirestore(){
   try{
     const doc = await firestoreDB.collection(USERS_COLLECTION).doc(currentUser.uid).get();
     const cloudIds = (doc.exists && Array.isArray(doc.data().bookmarks)) ? doc.data().bookmarks : [];
+    console.log('[Bookmarks] Loaded from Firestore for', currentUser.email, '— cloud has', cloudIds.length, 'saved plant(s).');
     // Merge any guest bookmarks made before logging in, so nothing is lost.
     const merged = new Set([...cloudIds, ...bookmarkedIds]);
     bookmarkedIds = merged;
     await saveUserBookmarksToFirestore();
     renderHome();
     filterLibrary();
-  }catch(e){ console.warn('Could not load user bookmarks:', e); }
+  }catch(e){
+    console.warn('Could not load user bookmarks:', e);
+    // Surface this on-screen too — previously this failed completely
+    // silently, which is exactly why bookmarks not syncing across devices
+    // was so hard to notice/diagnose.
+    alert('⚠️ Hindi ma-load ang naka-save mong bookmarks mula sa cloud: ' + e.message + '\n\nMaaaring isyu ito sa Firestore Security Rules (halimbawa, na-expire na ang "test mode"). Puwedeng lokal lang muna ang gamit ng bookmarks mo sa device na ito.');
+  }
 }
 async function saveUserBookmarksToFirestore(){
   if(!currentUser || !firestoreConnected) return;
@@ -1808,7 +1834,11 @@ async function saveUserBookmarksToFirestore(){
       bookmarks: [...bookmarkedIds],
       email: currentUser.email
     }, {merge:true});
-  }catch(e){ console.warn('Could not save user bookmarks:', e); }
+    console.log('[Bookmarks] Synced', bookmarkedIds.size, 'bookmark(s) to Firestore for', currentUser.email);
+  }catch(e){
+    console.warn('Could not save user bookmarks:', e);
+    alert('⚠️ Hindi na-save ang bookmark mo sa cloud (lokal lang ito sa device na ito ngayon): ' + e.message);
+  }
 }
 function isBookmarked(id){ return bookmarkedIds.has(id); }
 function toggleBookmark(id){
@@ -1986,6 +2016,37 @@ function renderSavedSection(){
 let stream = null;
 let capturedDataUrl = null;
 let lastMatchedPlant = null;
+// When set, the NEXT successful scan is treated as the second half of a
+// "Compare" (side-by-side) request instead of a normal single result —
+// see startCompareScan() and showCompareResult().
+let compareModeFirstPlant = null;
+function startCompareScan(){
+  if(!lastMatchedPlant){ alert('Mag-scan muna ng unang halaman.'); return; }
+  compareModeFirstPlant = lastMatchedPlant;
+  goToScan();
+}
+/* Renders a small info block for one side of the Compare screen — reused
+   for both the first and second scanned plant so the two columns always
+   look identical in structure, easy to eyeball side by side. */
+function compareCardHTML(p){
+  const topUses = (p.uses||[]).slice(0,3);
+  const topBenefits = (p.benefits||[]).slice(0,2);
+  return `
+    <div class="icon-wrap">${plantVisualHTML(p,64)}</div>
+    <h2 style="font-size:15px; margin-top:8px;">${p.name}</h2>
+    <div class="sci" style="font-size:11px;">${p.sci}</div>
+    <span class="tag" style="margin-top:6px;">${p.cat}</span>
+    ${topUses.length? `<h4 style="font-size:11.5px; margin-top:10px;">Medisinal na Gamit</h4><ul style="text-align:left; font-size:11.5px; padding-left:16px; margin:4px 0;">${topUses.map(u=>`<li>${u}</li>`).join('')}</ul>` : ''}
+    ${topBenefits.length? `<h4 style="font-size:11.5px; margin-top:8px;">Benepisyo</h4><ul style="text-align:left; font-size:11.5px; padding-left:16px; margin:4px 0;">${topBenefits.map(b=>`<li>${b}</li>`).join('')}</ul>` : ''}
+    <button class="btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:8px;" onclick="openDetail(${p.id},'compare')">Buong Detalye</button>
+  `;
+}
+function showCompareResult(plantA, plantB){
+  document.getElementById('compare-card-1').innerHTML = compareCardHTML(plantA);
+  document.getElementById('compare-card-2').innerHTML = compareCardHTML(plantB);
+  compareModeFirstPlant = null;
+  showScreen('compare');
+}
 let recognition = null;
 let listening = false;
 
@@ -2850,7 +2911,12 @@ async function runAnalysis(canvas){
     }
     aw.classList.remove('show');
     if(match.notHerbal){
+      // In compare mode, a failed second scan just cancels compare mode
+      // instead of leaving the person stuck — they can start over.
+      if(compareModeFirstPlant){ compareModeFirstPlant = null; }
       showNotHerbalResult(match.alts);
+    } else if(compareModeFirstPlant){
+      showCompareResult(compareModeFirstPlant, match.plant);
     } else {
       showResult(match.plant, match.confidence, match.mode, match.alts, match.lowConfidence);
     }
