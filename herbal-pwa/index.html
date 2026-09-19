@@ -2929,19 +2929,75 @@ function matchWithAI(canvas){
   try{
     const queryVec = computeEmbeddingFromElement(canvas);
     if(!queryVec) return null;
-    const perPlantScore = {};
+
+    // ================= TRUE k-NEAREST-NEIGHBORS MATCHING =================
+    // PROBLEM THIS FIXES: the previous version scored each plant by the
+    // AVERAGE similarity across all of its training photos. Averaging
+    // dilutes the signal — if a plant has 5 training photos from different
+    // angles/lighting and only 2 of them actually resemble the scanned
+    // leaf well, averaging drags the score down with the other 3 mediocre
+    // matches. This made visually similar-looking leaves (e.g. two plants
+    // with similar leaf shape/color) harder to tell apart, since their
+    // averaged scores could end up close together even when one of them
+    // has an individual sample photo that matches far better than any of
+    // the other plant's photos.
+    //
+    // FIX: pool every individual training sample from every plant into one
+    // list, compare the scanned photo against each sample individually
+    // (not per-plant averages), and let the K closest INDIVIDUAL samples
+    // "vote" for their plant, weighted by how similar each one is. This is
+    // the standard k-NN approach and is specifically better at separating
+    // look-alikes, because a single excellent matching photo for the true
+    // plant can now properly outweigh several mediocre photos belonging to
+    // a similar-looking but different plant.
+    const allSamples = [];
     Object.keys(trainingData).forEach(plantId=>{
-      const samples = trainingData[plantId];
-      const sims = samples.map(s=> cosineSimilarity(queryVec, s.vector));
-      // Average similarity across all trained samples for this plant — more stable
-      // than relying on a single nearest neighbor when sample counts are small.
-      const avg = sims.reduce((a,b)=>a+b,0) / sims.length;
-      perPlantScore[plantId] = avg;
+      trainingData[plantId].forEach(s=>{
+        allSamples.push({ plantId, sim: cosineSimilarity(queryVec, s.vector) });
+      });
     });
-    const ranked = Object.keys(perPlantScore)
-      .map(pid=>({plant: PLANTS.find(p=>p.id===Number(pid)), sim: perPlantScore[pid]}))
+    if(allSamples.length===0) return null;
+    allSamples.sort((a,b)=> b.sim - a.sim);
+
+    // K = how many of the closest individual sample photos (across ALL
+    // plants combined) get a "vote". 7 is a reasonable default for a
+    // collection of ~25-40 plants with a handful of samples each — raise
+    // it if you add many more training photos per plant later, since a
+    // bigger, richer dataset can support looking at more neighbors without
+    // losing precision.
+    const K = Math.min(7, allSamples.length);
+    const topK = allSamples.slice(0, K);
+
+    // Each plant's vote total = sum of similarities of ITS samples that
+    // made it into the top-K nearest neighbors. A plant with zero samples
+    // in the top-K gets zero votes here (it simply wasn't close to the
+    // scanned photo at all compared to other candidates).
+    const voteScore = {};
+    topK.forEach(s=>{ voteScore[s.plantId] = (voteScore[s.plantId]||0) + s.sim; });
+
+    // For every plant, also track its single BEST individual sample
+    // similarity (not an average) — used as the displayed/ranked score so
+    // "confidence" reflects "how good was this plant's best matching
+    // photo", which is far more meaningful than a diluted average, and
+    // keeps every plant (even ones with 0 votes) ranked sensibly for the
+    // alt-matches list.
+    const bestSim = {};
+    allSamples.forEach(s=>{
+      if(!(s.plantId in bestSim) || s.sim > bestSim[s.plantId]) bestSim[s.plantId] = s.sim;
+    });
+
+    const ranked = Object.keys(bestSim)
+      .map(pid=>({
+        plant: PLANTS.find(p=>p.id===Number(pid)),
+        sim: bestSim[pid],       // best-single-sample similarity — used for display/confidence
+        votes: voteScore[pid]||0 // k-NN weighted votes — used to decide the actual winner below
+      }))
       .filter(r=>r.plant)
-      .sort((a,b)=>b.sim-a.sim);
+      // Winner is decided by k-NN VOTES first (this is what actually
+      // separates close look-alikes correctly), falling back to best-single
+      // -sample similarity only to break an exact vote tie.
+      .sort((a,b)=> (b.votes - a.votes) || (b.sim - a.sim));
+
     if(ranked.length===0) return null;
     const top = ranked[0];
 
@@ -2961,7 +3017,8 @@ function matchWithAI(canvas){
     // if random objects still get accepted as a match; lower it if real
     // trained plants start getting wrongly rejected as "not recognized."
     const NOT_HERBAL_THRESHOLD = 0.25;
-    console.log('[AI] raw top similarity:', top.sim.toFixed(3), '(reject threshold:', NOT_HERBAL_THRESHOLD, ')');
+    console.log('[AI] raw top similarity:', top.sim.toFixed(3), '| k-NN votes for winner:', top.votes.toFixed(3), 'of K='+K, '(reject threshold:', NOT_HERBAL_THRESHOLD, ')');
+    if(ranked.length>1) console.log('[AI] runner-up:', ranked[1].plant.name, '— sim:', ranked[1].sim.toFixed(3), 'votes:', ranked[1].votes.toFixed(3));
     if(top.sim < NOT_HERBAL_THRESHOLD){
       const alts = ranked.slice(0,3).map(r=>({plant:r.plant, pct: Math.round(r.sim*100)}));
       return {notHerbal:true, mode:'real', alts};
