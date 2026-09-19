@@ -1071,6 +1071,82 @@ const DEFAULT_PLANTS = [
    so the app instantly shows content while the cloud sync happens in the background. */
 let PLANTS = DEFAULT_PLANTS.map(p=>({...p}));
 
+/* ================= LOCAL-ONLY ADMIN CHANGES (OFFLINE-SAFE FALLBACK) =================
+   PROBLEM THIS FIXES: previously, if the admin saved a new/edited plant while
+   Firestore wasn't connected yet (slow network, page just opened, Firebase
+   script still loading, etc.), the change only existed in the in-memory
+   PLANTS array. Refreshing the page — or opening the site on any other
+   device — wiped it out completely, because it was never written anywhere
+   durable.
+   FIX: every admin save/delete is now ALSO written to localStorage
+   immediately (durable on this device, survives refresh), and is
+   automatically re-attempted against Firestore the moment a connection is
+   available — on startup, after a manual "Ulitin ang Koneksyon", and right
+   after any successful Firestore read. No manual re-entry needed once the
+   network/Firestore comes back. */
+const LOCAL_PLANT_OVERRIDES_KEY = 'herbal_local_plant_overrides_v1';
+const LOCAL_PLANT_DELETES_KEY   = 'herbal_local_plant_deletes_v1';
+
+function getLocalPlantOverrides(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_PLANT_OVERRIDES_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setLocalPlantOverrides(obj){
+  try{ localStorage.setItem(LOCAL_PLANT_OVERRIDES_KEY, JSON.stringify(obj)); }catch(e){}
+}
+function getLocalPlantDeletes(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_PLANT_DELETES_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function setLocalPlantDeletes(arr){
+  try{ localStorage.setItem(LOCAL_PLANT_DELETES_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+/* Re-apply any pending local-only admin edits/deletes on top of whatever
+   PLANTS currently holds (DEFAULT_PLANTS or freshly loaded Firestore data),
+   so a change made while offline/not-yet-connected is never silently lost —
+   it stays visible on THIS device until it successfully syncs. */
+function applyLocalPlantOverrides(){
+  const overrides = getLocalPlantOverrides();
+  const deleteIds = new Set(getLocalPlantDeletes());
+  if(deleteIds.size){
+    PLANTS = PLANTS.filter(p=>!deleteIds.has(String(p.id)));
+  }
+  Object.keys(overrides).forEach(idStr=>{
+    const plant = overrides[idStr];
+    const idx = PLANTS.findIndex(p=>String(p.id)===idStr);
+    if(idx>=0) PLANTS[idx] = plant; else PLANTS.push(plant);
+  });
+  PLANTS.sort((a,b)=>a.id-b.id);
+}
+applyLocalPlantOverrides();
+
+/* Push every pending local-only change to Firestore. Safe to call anytime —
+   it no-ops if there's nothing pending or if Firestore isn't connected yet.
+   Called automatically right after a connection is (re)established. */
+async function flushPendingPlantSync(){
+  if(!firestoreConnected) return;
+  const overrides = getLocalPlantOverrides();
+  const deletes = getLocalPlantDeletes();
+  const overrideIds = Object.keys(overrides);
+  if(overrideIds.length===0 && deletes.length===0) return;
+  try{
+    const batch = firestoreDB.batch();
+    overrideIds.forEach(idStr=>{
+      batch.set(firestoreDB.collection(PLANTS_COLLECTION).doc(idStr), overrides[idStr]);
+    });
+    deletes.forEach(idStr=>{
+      batch.delete(firestoreDB.collection(PLANTS_COLLECTION).doc(idStr));
+    });
+    await batch.commit();
+    setLocalPlantOverrides({});
+    setLocalPlantDeletes([]);
+    console.log(`Pending admin changes synced to Firestore: ${overrideIds.length} edit(s), ${deletes.length} delete(s).`);
+  }catch(e){
+    console.warn('Could not flush pending plant changes yet, will retry later:', e);
+  }
+}
+
 /* ================= FIRESTORE (cloud database) CONNECTION =================
    1. Create a free project at https://console.firebase.google.com
    2. Add a Web App inside it, copy the config object it gives you
@@ -1237,12 +1313,16 @@ async function loadPlantsFromFirestore(){
     const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 20000);
     if(snap.empty){
       setDBStatus('empty');
+      // Collection has nothing yet, but we ARE connected — still worth
+      // trying to push any pending local-only admin changes now.
+      flushPendingPlantSync();
       return;
     }
     const cloudPlants = [];
     snap.forEach(doc=> cloudPlants.push(doc.data()));
     cloudPlants.sort((a,b)=> a.id - b.id);
     PLANTS = cloudPlants;
+    applyLocalPlantOverrides();
     plantsRetryCount = 0;
     setDBStatus('connected');
     // re-render any screens that depend on PLANTS, now with live cloud data
@@ -1251,6 +1331,9 @@ async function loadPlantsFromFirestore(){
     filterLibrary();
     renderTrainChips();
     renderTrainList();
+    // Now that we have a confirmed live connection, push any admin changes
+    // that were made earlier while offline/not-yet-connected.
+    flushPendingPlantSync();
   }catch(e){
     console.warn('Firestore read failed:', e);
     if(plantsRetryCount < MAX_AUTO_RETRIES){
@@ -1511,15 +1594,33 @@ async function saveAdminPlant(){
   else PLANTS.push(plant);
   PLANTS.sort((a,b)=>a.id-b.id);
 
+  // ALWAYS persist locally first (localStorage), regardless of Firestore
+  // status. This is what makes the change survive a refresh even if
+  // Firestore is down/slow, and lets it auto-sync later via
+  // flushPendingPlantSync() instead of being silently lost.
+  const _overrides = getLocalPlantOverrides();
+  _overrides[String(id)] = plant;
+  setLocalPlantOverrides(_overrides);
+  setLocalPlantDeletes(getLocalPlantDeletes().filter(x=>x!==String(id)));
+
+  // Not connected right now? Try once to (re)establish the connection
+  // immediately, in case Firestore simply hadn't finished initializing yet
+  // (e.g. plant was added within the first second or two of opening the app).
+  if(!firestoreConnected && isFirebaseConfigured()){
+    initFirebase();
+  }
+
   if(firestoreConnected){
     try{
       await firestoreDB.collection(PLANTS_COLLECTION).doc(String(id)).set(plant);
+      // Synced successfully — remove from the pending local queue.
+      const _o2 = getLocalPlantOverrides(); delete _o2[String(id)]; setLocalPlantOverrides(_o2);
     }catch(e){
       console.error(e);
-      alert('Na-save nang lokal, pero may error sa pag-sync sa Firestore: ' + e.message);
+      alert('Na-save nang lokal sa device na ito, pero may error sa pag-sync sa Firestore:\n' + e.message + '\n\nAwtomatiko itong susubukang i-sync ulit sa susunod na successful na koneksyon — huwag mo lang buksan ang app gamit ang "Clear browsing data" bago ito ma-sync.');
     }
   } else {
-    alert('Paalala: hindi naka-connect sa Firestore, kaya lokal lang ang pagbabagong ito (mawawala pag na-reload ang page).');
+    alert('⚠️ HINDI PA NAKA-CONNECT sa Firestore ngayon.\n\nNa-save ang "' + name + '" sa DEVICE NA ITO LANG — hindi pa ito makikita sa ibang phone/laptop.\n\nPumunta sa About tab → i-click ang "🔄 Ulitin ang Koneksyon". Kapag naging "Connected to Firestore (cloud)" na ang status, awtomatiko nang mai-sync ang pagbabagong ito papunta sa ibang device.');
   }
 
   closeAdminEditor();
@@ -1536,9 +1637,22 @@ async function deleteAdminPlant(id){
   if(!p) return;
   if(!confirm(`Sigurado ka bang gusto mong burahin ang "${p.name}"? Hindi na ito mababawi.`)) return;
   PLANTS = PLANTS.filter(x=>x.id!==id);
+
+  // Record the delete locally too, so it survives a refresh and gets
+  // applied/synced even if Firestore isn't connected right this moment.
+  const _o = getLocalPlantOverrides(); delete _o[String(id)]; setLocalPlantOverrides(_o);
+  const _d = getLocalPlantDeletes(); if(!_d.includes(String(id))) _d.push(String(id)); setLocalPlantDeletes(_d);
+
+  if(!firestoreConnected && isFirebaseConfigured()) initFirebase();
+
   if(firestoreConnected){
-    try{ await firestoreDB.collection(PLANTS_COLLECTION).doc(String(id)).delete(); }
-    catch(e){ console.error(e); alert('May error sa pagbura sa Firestore: ' + e.message); }
+    try{
+      await firestoreDB.collection(PLANTS_COLLECTION).doc(String(id)).delete();
+      setLocalPlantDeletes(getLocalPlantDeletes().filter(x=>x!==String(id)));
+    }
+    catch(e){ console.error(e); alert('Nabura nang lokal, pero may error sa pag-sync sa Firestore: ' + e.message + '\n\nAwtomatiko itong susubukang i-sync ulit sa susunod na koneksyon.'); }
+  } else {
+    alert('⚠️ Nabura ang "'+p.name+'" sa device na ito lang — hindi pa naka-connect sa Firestore. Awtomatiko itong ma-sy-sync kapag bumalik ang koneksyon.');
   }
   renderAdminList();
   renderHome();
