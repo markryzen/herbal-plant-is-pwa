@@ -246,6 +246,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 .save-btn.saved svg{ fill:var(--gold); stroke:var(--gold); }
 .saved-badge{ position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(30,58,43,0.85); display:flex; align-items:center; justify-content:center; z-index:5; }
 .saved-badge svg{ width:11px; height:11px; fill:var(--gold); stroke:var(--gold); stroke-width:2; }
+.new-badge{ position:absolute; top:6px; left:6px; padding:2px 7px; border-radius:20px; background:var(--clay); color:#fff; font-size:8.5px; font-weight:700; letter-spacing:.04em; z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
 .admin-label{ display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:700; color:var(--forest); }
 .admin-input{ font-family:'Inter'; font-size:13px; font-weight:400; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 11px; resize:vertical; }
 .admin-item-row{ display:flex; gap:8px; }
@@ -270,7 +271,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 .dblock{ margin-bottom:20px; }
 .dblock h4{ font-family:'Fraunces'; font-size:14px; color:var(--forest); display:flex; align-items:center; gap:7px; margin-bottom:7px;}
 .dblock h4 svg{ width:15px; height:15px; stroke:var(--gold-deep); fill:none; stroke-width:2;}
-.dblock p{ font-size:13.5px; }
+.dblock p{ font-size:13.5px; white-space:pre-line; }
 .dblock ul{ margin:0; padding-left:18px; }
 .dblock li{ font-size:13.5px; color:var(--ink-soft); line-height:1.6; }
 .caution-box{ background:#F7E9DD; border:1px solid rgba(156,83,53,0.3); border-radius:14px; padding:12px 14px; font-size:12.5px; color:var(--clay); }
@@ -460,7 +461,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
       </div>
       <div class="searchbar">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="search-input" placeholder="Hanapin ang pangalan ng halaman..." oninput="filterLibrary()">
+        <input id="search-input" placeholder="Pangalan ng halaman o sintomas (hal. ubo)..." oninput="filterLibrary()">
         <button class="mic-btn" id="mic-btn" onclick="toggleVoiceSearch()">
           <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
         </button>
@@ -530,6 +531,22 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
             <button class="btn-primary" id="result-view-btn">Tingnan ang Detalye</button>
           </div>
         </div>
+        <div class="result-card" id="result-not-herbal-card" style="display:none; text-align:center;">
+          <div style="font-size:44px; margin-bottom:10px;">🌿❓</div>
+          <h2 style="font-size:18px;">Hindi Nakilalang Halamang Gamot</h2>
+          <p class="result-desc" style="margin-top:8px;">
+            Hindi tugma ang larawang ito sa alinman sa mga halamang gamot na
+            kilala ng system (base sa AI training data). Maaaring:
+          </p>
+          <ul style="text-align:left; font-size:13px; color:var(--ink-soft); padding-left:20px; margin:10px 0;">
+            <li>Hindi ito isang herbal/medicinal plant, o</li>
+            <li>Herbal plant ito pero wala pa itong training data sa system (sabihin sa admin para madagdagan).</li>
+          </ul>
+          <div class="result-actions">
+            <button class="btn-secondary" onclick="goToScan()">Ulitin ang Scan</button>
+            <button class="btn-primary" onclick="showScreen('library')">Tingnan ang Library</button>
+          </div>
+        </div>
         <div class="alt-matches">
           <h4>Ibang posibleng tugma</h4>
           <div id="alt-list"></div>
@@ -577,11 +594,13 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         </div>
         <div class="dblock">
           <h4><svg viewBox="0 0 24 24"><path d="M3 17l9-13 9 13z"/><path d="M12 10v3M12 15h.01"/></svg>Paraan ng Paggamit</h4>
+          <ol id="detail-prep-list" style="padding-left:18px; margin:0; font-size:13.5px; color:var(--ink-soft); display:none;"></ol>
           <p id="detail-prep">—</p>
         </div>
         <div class="dblock">
           <div class="caution-box" id="detail-caution">—</div>
         </div>
+        <p id="detail-date-added" style="font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:12px;"></p>
         <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-bottom:20px;" onclick="downloadPlantInfo()">⬇️ I-download ang Impormasyon</button>
       </div>
     </div>
@@ -743,7 +762,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
           <label class="admin-label">Ginagamit na Bahagi<input type="text" id="admin-f-parts" class="admin-input"></label>
           <label class="admin-label">Medisinal na Gamit (isang linya bawat isa)<textarea id="admin-f-uses" class="admin-input" rows="3"></textarea></label>
           <label class="admin-label">Benepisyo (isang linya bawat isa)<textarea id="admin-f-benefits" class="admin-input" rows="3"></textarea></label>
-          <label class="admin-label">Paraan ng Paggamit<textarea id="admin-f-prep" class="admin-input" rows="2"></textarea></label>
+          <label class="admin-label">Paraan ng Paggamit (isang hakbang bawat linya)<textarea id="admin-f-prep" class="admin-input" rows="4" placeholder="Hal:&#10;Kumuha ng 5 sariwang dahon&#10;Pakuluan sa 2 tasang tubig ng 10 minuto&#10;Inumin nang 2 beses araw-araw"></textarea></label>
           <label class="admin-label">Paalala/Caution<textarea id="admin-f-caution" class="admin-input" rows="2"></textarea></label>
         </div>
 
@@ -1217,8 +1236,7 @@ function initFirebase(){
       console.warn('enablePersistence threw synchronously:', persistErr);
     }
     firestoreConnected = true;
-    setDBStatus('connecting');
-    loadPlantsFromFirestore();
+    subscribeToPlantsLive();
     // loadEmbeddingsFromFirestore() is heavy (full collection, vectors +
     // thumbnails) and is intentionally deferred — see startHeavyBackgroundLoads().
     if(heavyLoadsStarted) loadEmbeddingsFromFirestore();
@@ -1253,8 +1271,7 @@ function withTimeout(promise, ms){
 
 function retryFirestoreConnection(){
   plantsRetryCount = 0;
-  setDBStatus('connecting');
-  loadPlantsFromFirestore();
+  subscribeToPlantsLive();
   loadEmbeddingsFromFirestore();
 }
 
@@ -1308,43 +1325,70 @@ async function loadEmbeddingsFromFirestore(){
 
 let plantsRetryCount = 0;
 const MAX_AUTO_RETRIES = 3;
-async function loadPlantsFromFirestore(){
-  try{
-    const snap = await withTimeout(firestoreDB.collection(PLANTS_COLLECTION).get(), 20000);
-    if(snap.empty){
-      setDBStatus('empty');
-      // Collection has nothing yet, but we ARE connected — still worth
-      // trying to push any pending local-only admin changes now.
+let plantsUnsubscribe = null; // handle to stop the live listener, if we ever need to
+
+/* LIVE, REAL-TIME plant list. Uses Firestore's onSnapshot() instead of a
+   one-time get() — this keeps an open connection that Firestore itself
+   pushes updates through, so the moment the admin saves a change (from
+   ANY device), every other open tab/phone updates automatically, with NO
+   refresh needed. This is what makes "live talaga siya" actually true for
+   a PWA like this one. Safe to call more than once — it replaces any
+   previous listener instead of stacking duplicates. */
+function subscribeToPlantsLive(){
+  if(plantsUnsubscribe){ try{ plantsUnsubscribe(); }catch(e){} plantsUnsubscribe = null; }
+  setDBStatus('connecting');
+  plantsUnsubscribe = firestoreDB.collection(PLANTS_COLLECTION).onSnapshot(
+    (snap)=>{
+      if(snap.empty){
+        setDBStatus('empty');
+        flushPendingPlantSync();
+        return;
+      }
+      const cloudPlants = [];
+      snap.forEach(doc=> cloudPlants.push(doc.data()));
+      cloudPlants.sort((a,b)=> a.id - b.id);
+      PLANTS = cloudPlants;
+      applyLocalPlantOverrides();
+      plantsRetryCount = 0;
+      setDBStatus('connected');
+      // re-render any screens that depend on PLANTS — this fires again
+      // automatically every time the data changes, on every open device.
+      renderHome();
+      renderLibraryChips();
+      filterLibrary();
+      renderTrainChips();
+      renderTrainList();
+      // Also refresh whichever plant is currently open on Detail/Result
+      // screens, so an admin edit shows up immediately even mid-view.
+      refreshOpenPlantViewsIfNeeded();
       flushPendingPlantSync();
-      return;
+    },
+    (err)=>{
+      console.warn('Firestore live listener error:', err);
+      if(plantsRetryCount < MAX_AUTO_RETRIES){
+        plantsRetryCount++;
+        const delay = plantsRetryCount * 3000; // 3s, 6s, 9s backoff
+        setDBStatus('connecting');
+        setTimeout(subscribeToPlantsLive, delay);
+      } else {
+        setDBStatus('error');
+      }
     }
-    const cloudPlants = [];
-    snap.forEach(doc=> cloudPlants.push(doc.data()));
-    cloudPlants.sort((a,b)=> a.id - b.id);
-    PLANTS = cloudPlants;
-    applyLocalPlantOverrides();
-    plantsRetryCount = 0;
-    setDBStatus('connected');
-    // re-render any screens that depend on PLANTS, now with live cloud data
-    renderHome();
-    renderLibraryChips();
-    filterLibrary();
-    renderTrainChips();
-    renderTrainList();
-    // Now that we have a confirmed live connection, push any admin changes
-    // that were made earlier while offline/not-yet-connected.
-    flushPendingPlantSync();
-  }catch(e){
-    console.warn('Firestore read failed:', e);
-    if(plantsRetryCount < MAX_AUTO_RETRIES){
-      plantsRetryCount++;
-      const delay = plantsRetryCount * 3000; // 3s, 6s, 9s backoff
-      setDBStatus('connecting');
-      setTimeout(loadPlantsFromFirestore, delay);
-    } else {
-      setDBStatus('error');
+  );
+}
+
+/* If the person is currently looking at a plant's Detail page or a scan
+   Result page, re-render it with the freshest data after a live update —
+   otherwise they'd keep seeing the old text/photo until they navigate away
+   and back, even though the underlying PLANTS array already updated. */
+function refreshOpenPlantViewsIfNeeded(){
+  try{
+    if(typeof lastOpenedPlantId !== 'undefined' && lastOpenedPlantId != null){
+      const p = PLANTS.find(x=>x.id===lastOpenedPlantId);
+      const detailScreen = document.getElementById('screen-detail');
+      if(p && detailScreen && detailScreen.classList.contains('active')) openDetail(p.id, currentDetailFrom || 'library');
     }
-  }
+  }catch(e){ /* non-critical UI refresh — never let this break the live update */ }
 }
 
 async function seedFirestore(){
@@ -1360,8 +1404,9 @@ async function seedFirestore(){
       batch.set(ref, p);
     });
     await batch.commit();
-    alert('Tagumpay! Na-upload na ang plant data sa Firestore. Ire-refresh na ang datos.');
-    loadPlantsFromFirestore();
+    alert('Tagumpay! Na-upload na ang plant data sa Firestore.');
+    // No manual reload needed — the live listener (subscribeToPlantsLive)
+    // picks this up automatically within a moment.
   }catch(e){
     console.error(e);
     alert('May error sa pag-upload: ' + e.message);
@@ -1467,12 +1512,14 @@ function renderAdminList(){
   }
   list.innerHTML = filtered.map(p=>{
     const sampleCount = (trainingData[p.id]||[]).length;
+    const dateStr = p.dateAdded ? new Date(p.dateAdded).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : 'walang petsa (lumang entry)';
     return `
     <div class="train-item">
       <div class="icon-wrap">${plantVisualHTML(p,44)}</div>
       <div class="info" style="flex:1;">
         <div class="n">${p.name}</div>
         <div class="samples ${sampleCount>0?'has-data':''}">${p.cat} · ${sampleCount} training photo${sampleCount===1?'':'s'}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">Idinagdag: ${dateStr}</div>
         <div class="admin-item-row" style="margin-top:8px;">
           <button class="admin-edit-btn" onclick="openAdminEditor(${p.id})">Edit</button>
           <button class="admin-del-btn" onclick="deleteAdminPlant(${p.id})">Burahin</button>
@@ -1588,6 +1635,11 @@ async function saveAdminPlant(){
     benefits: document.getElementById('admin-f-benefits').value.split('\n').map(s=>s.trim()).filter(Boolean),
     prep: document.getElementById('admin-f-prep').value.trim(),
     caution: document.getElementById('admin-f-caution').value.trim(),
+    // Record WHEN this entry was first created — kept as-is on every future
+    // edit (only a brand-new plant gets a fresh timestamp), so "Bagong
+    // Idinagdag" and the detail-page date always reflect the true add date,
+    // not the last-edited date.
+    dateAdded: existing && existing.dateAdded ? existing.dateAdded : Date.now(),
   };
 
   if(existing) Object.assign(existing, plant);
@@ -2259,16 +2311,26 @@ function renderHome(){
   chipRow.innerHTML = CATEGORIES.slice(1,6).map(c=>`<button class="chip" onclick="goCategory('${c}')">${c}</button>`).join('');
   const carousel = document.getElementById('home-carousel');
   carousel.innerHTML = PLANTS.slice(0,8).map(p=>specCard(p)).join('');
+  // "Bagong Idinagdag" — genuinely the most recently added plants, newest
+  // first, based on each plant's real dateAdded timestamp (older entries
+  // without one are treated as oldest so they never wrongly show as "new").
   const carousel2 = document.getElementById('home-carousel2');
-  carousel2.innerHTML = PLANTS.slice(8,16).map(p=>specCard(p)).join('');
+  const newest = [...PLANTS].sort((a,b)=> (b.dateAdded||0) - (a.dateAdded||0)).slice(0,8);
+  carousel2.innerHTML = newest.map(p=>specCard(p)).join('');
   renderSavedSection();
 }
 function goCategory(cat){ showScreen('library'); setTimeout(()=>{ selectChip(cat); },50); }
 
 function specCard(p){
   const savedBadge = isBookmarked(p.id) ? `<div class="saved-badge"><svg viewBox="0 0 24 24"><path d="M6 4a2 2 0 012-2h8a2 2 0 012 2v17l-6-4-6 4V4z"/></svg></div>` : '';
+  // Small "BAGO" ribbon for anything added within the last 7 days, so a
+  // freshly-added plant is visually obvious to anyone browsing, not just
+  // tucked away in the "Bagong Idinagdag" row.
+  const isNew = p.dateAdded && (Date.now() - p.dateAdded) < (7*24*60*60*1000);
+  const newBadge = isNew ? `<div class="new-badge">BAGO</div>` : '';
   return `<div class="spec-card" onclick="openDetail(${p.id},'home')">
     ${savedBadge}
+    ${newBadge}
     <div class="icon-wrap">${plantVisualHTML(p,56)}</div>
     <div class="name">${p.name}</div>
     <div class="sci">${p.sci}</div>
@@ -2290,12 +2352,26 @@ function filterLibrary(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   let list = PLANTS.filter(p=>{
     const matchesCat = activeCat==='All' || (activeCat===SAVED_FILTER ? isBookmarked(p.id) : p.cat===activeCat);
-    const matchesQ = !q || p.name.toLowerCase().includes(q) || p.sci.toLowerCase().includes(q) || p.local.join(' ').toLowerCase().includes(q);
+    // Search now also checks medicinal uses and benefits, not just the
+    // plant's own name — so typing a symptom like "ubo" (cough) or "sakit
+    // ng tiyan" (stomach ache) surfaces every plant whose "Medisinal na
+    // Gamit" or "Benepisyo" list mentions it, even if the plant's name has
+    // nothing to do with that word. This is what makes symptom-based
+    // searching work (e.g. searching "ubo" finds Lagundi, Oregano, etc.
+    // as long as their uses field mentions "ubo" somewhere).
+    const usesText = (p.uses||[]).join(' ').toLowerCase();
+    const benefitsText = (p.benefits||[]).join(' ').toLowerCase();
+    const matchesQ = !q
+      || p.name.toLowerCase().includes(q)
+      || p.sci.toLowerCase().includes(q)
+      || p.local.join(' ').toLowerCase().includes(q)
+      || usesText.includes(q)
+      || benefitsText.includes(q);
     return matchesCat && matchesQ;
   });
   const grid = document.getElementById('library-grid');
   if(list.length===0){
-    const msg = activeCat===SAVED_FILTER ? 'Wala ka pang na-save na halaman. Pumunta sa detalye ng isang halaman at pindutin ang bookmark icon.' : `Walang nahanap na halaman para sa "${q}". Subukan ang ibang keyword.`;
+    const msg = activeCat===SAVED_FILTER ? 'Wala ka pang na-save na halaman. Pumunta sa detalye ng isang halaman at pindutin ang bookmark icon.' : `Walang nahanap na halaman para sa "${q}". Subukan ang ibang keyword (hal. pangalan ng halaman o sintomas tulad ng "ubo").`;
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${msg}</div>`;
     return;
   }
@@ -2419,7 +2495,28 @@ function openDetail(id, from){
   document.getElementById('detail-uses').innerHTML = p.uses.map(u=>`<li>${u}</li>`).join('');
   document.getElementById('detail-benefits').innerHTML = p.benefits.map(b=>`<li>${b}</li>`).join('');
   document.getElementById('detail-prep').textContent = p.prep;
+  // If the admin wrote multiple steps (one per line) in "Paraan ng
+  // Paggamit", show them as a proper numbered list instead of one run-on
+  // paragraph — makes multi-step preparation instructions much easier to
+  // follow (e.g. "1. Kumuha ng 5 dahon... 2. Pakuluan sa... 3. Iinom...").
+  const prepLines = (p.prep||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const prepListEl = document.getElementById('detail-prep-list');
+  const prepParaEl = document.getElementById('detail-prep');
+  if(prepLines.length > 1){
+    prepListEl.innerHTML = prepLines.map(line=>`<li style="margin-bottom:6px;">${line}</li>`).join('');
+    prepListEl.style.display = 'block';
+    prepParaEl.style.display = 'none';
+  } else {
+    prepListEl.style.display = 'none';
+    prepParaEl.style.display = 'block';
+  }
   document.getElementById('detail-caution').innerHTML = `<strong>Paalala:</strong> ${p.caution}`;
+  const dateEl = document.getElementById('detail-date-added');
+  if(dateEl){
+    dateEl.textContent = p.dateAdded
+      ? 'Idinagdag noong: ' + new Date(p.dateAdded).toLocaleString('en-PH', {year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'})
+      : '';
+  }
   updateSaveButtonUI(id);
   showScreen('detail');
 }
@@ -2752,7 +2849,11 @@ async function runAnalysis(canvas){
       match = pickPlantFromImageDemo(canvas);
     }
     aw.classList.remove('show');
-    showResult(match.plant, match.confidence, match.mode, match.alts, match.lowConfidence);
+    if(match.notHerbal){
+      showNotHerbalResult(match.alts);
+    } else {
+      showResult(match.plant, match.confidence, match.mode, match.alts, match.lowConfidence);
+    }
   }, usingRealAI ? 1400 : 2000);
 }
 
@@ -2777,6 +2878,28 @@ function matchWithAI(canvas){
       .sort((a,b)=>b.sim-a.sim);
     if(ranked.length===0) return null;
     const top = ranked[0];
+
+    // ---- "Not an herbal plant" rejection ----
+    // top.sim is the RAW cosine similarity (0 to 1) between the scanned photo
+    // and the closest trained plant — this is a genuine closeness measure,
+    // unlike the softmax "confidence %" below (which always makes the best
+    // of the available options look relatively confident, even if literally
+    // nothing matches well). If the raw similarity doesn't even clear this
+    // floor, we treat it as "not recognized" instead of forcing a guess.
+    //
+    // ⚠️ TUNING NEEDED: this threshold was NOT verified against real photos
+    // (no camera/AI access while writing this). Test it yourself: scan a
+    // few non-plant objects (a chair, a phone, a wall) and a few genuine
+    // trained leaves, open the browser console, and check the logged
+    // "[AI] raw top similarity" value each time. Raise NOT_HERBAL_THRESHOLD
+    // if random objects still get accepted as a match; lower it if real
+    // trained plants start getting wrongly rejected as "not recognized."
+    const NOT_HERBAL_THRESHOLD = 0.25;
+    console.log('[AI] raw top similarity:', top.sim.toFixed(3), '(reject threshold:', NOT_HERBAL_THRESHOLD, ')');
+    if(top.sim < NOT_HERBAL_THRESHOLD){
+      const alts = ranked.slice(0,3).map(r=>({plant:r.plant, pct: Math.round(r.sim*100)}));
+      return {notHerbal:true, mode:'real', alts};
+    }
 
     // Display confidence uses a softmax over every candidate's raw similarity
     // rather than the raw number itself. Raw cosine similarities from this
@@ -2839,6 +2962,11 @@ function pickPlantFromImageDemo(canvas){
 }
 
 function showResult(plant, confidence, mode, alts, lowConfidence){
+  // Make sure the normal result card is visible and the "not recognized"
+  // card is hidden, in case the previous scan had triggered that state.
+  document.querySelector('#screen-result .result-card').style.display = '';
+  document.getElementById('result-not-herbal-card').style.display = 'none';
+
   lastMatchedPlant = plant;
   logScanHistory(plant, confidence, mode);
   document.getElementById('result-icon').innerHTML = plantVisualHTML(plant,100);
@@ -2867,6 +2995,29 @@ function showResult(plant, confidence, mode, alts, lowConfidence){
     modeTag.className = 'match-mode-tag demo';
     lowConfEl.style.display = 'none';
   }
+
+  document.getElementById('alt-list').innerHTML = (alts||[]).map(a=>{
+    return `<div class="alt-row" onclick="openDetail(${a.plant.id},'result')">
+      <div class="icon-wrap">${plantVisualHTML(a.plant,38)}</div>
+      <div class="info"><div class="n">${a.plant.name}</div><div class="p">${a.plant.sci}</div></div>
+      <div class="p2">${a.pct}%</div>
+    </div>`;
+  }).join('');
+
+  showScreen('result');
+}
+
+/* Shown instead of showResult() when matchWithAI() determines the scanned
+   photo doesn't resemble any trained herbal plant closely enough (see
+   NOT_HERBAL_THRESHOLD). Swaps the plant-result card for a dedicated
+   "not recognized" card, but still surfaces the closest few guesses in the
+   alt-matches list underneath — useful during AI training/testing so the
+   admin can see what the model WAS leaning toward, even though it wasn't
+   confident enough to call it a match. This scan is not logged to history,
+   since there is no actual plant identification to record. */
+function showNotHerbalResult(alts){
+  document.querySelector('#screen-result .result-card').style.display = 'none';
+  document.getElementById('result-not-herbal-card').style.display = '';
 
   document.getElementById('alt-list').innerHTML = (alts||[]).map(a=>{
     return `<div class="alt-row" onclick="openDetail(${a.plant.id},'result')">
