@@ -374,6 +374,8 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
 .train-add-btn{ width:36px; height:36px; border-radius:50%; background:var(--forest); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
 .train-add-btn svg{ width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2.4; }
 .reset-ai-btn{ margin:6px 20px 26px; width:calc(100% - 40px); padding:12px; border-radius:14px; background:none; border:1px solid rgba(156,83,53,0.4); color:var(--clay); font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Inter';}
+.compare-trigger-btn{ margin-top:12px; width:100%; padding:11px; border-radius:14px; background:var(--parchment-dark); border:1.5px solid var(--forest); color:var(--forest); font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Inter'; box-sizing:border-box; }
+.compare-trigger-btn:hover{ background:var(--forest); color:#fff; }
 .match-mode-tag{ display:inline-block; margin-top:10px; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
 .match-mode-tag.real{ background:#E7F0E4; color:var(--forest); }
 .match-mode-tag.demo{ background:#F7E9DD; color:var(--clay); }
@@ -530,7 +532,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
             <button class="btn-secondary" onclick="goToScan()">Ulitin ang Scan</button>
             <button class="btn-primary" id="result-view-btn">Tingnan ang Detalye</button>
           </div>
-          <button class="reset-ai-btn" style="margin-top:10px; width:100%;" onclick="startCompareScan()">🔍 I-compare sa Isa Pang Halaman</button>
+          <button class="compare-trigger-btn" onclick="startCompareScan()">🔍 I-compare sa Isa Pang Halaman</button>
         </div>
         <div class="result-card" id="result-not-herbal-card" style="display:none; text-align:center;">
           <div style="font-size:44px; margin-bottom:10px;">🌿❓</div>
@@ -621,6 +623,18 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         </div>
         <p id="detail-date-added" style="font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:12px;"></p>
         <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-bottom:20px;" onclick="downloadPlantInfo()">⬇️ I-download ang Impormasyon</button>
+
+        <div class="dblock" style="border-top:1px solid var(--line); padding-top:16px;">
+          <h4><svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>Ratings at Comments</h4>
+          <div id="reviews-summary" style="margin:8px 0 14px;"></div>
+          <div id="reviews-form-area" style="background:var(--parchment-dark); border-radius:14px; padding:12px; margin-bottom:14px;"></div>
+          <div id="reviews-list"></div>
+        </div>
+
+        <div class="dblock" style="border-top:1px solid var(--line); padding-top:16px;">
+          <h4><svg viewBox="0 0 24 24"><path d="M4 12h16M4 6h16M4 18h10"/></svg>Katulad na Halaman</h4>
+          <div class="carousel" id="related-plants-carousel" style="margin-top:8px;"></div>
+        </div>
       </div>
     </div>
 
@@ -667,6 +681,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         </div>
         <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:14px;" onclick="doLogin()">Mag-login</button>
         <button class="reset-ai-btn" style="background:var(--parchment-dark);color:var(--forest);border:none;margin-top:10px;" onclick="doRegister()">Gumawa ng Bagong Account</button>
+        <div style="text-align:center; margin-top:8px;"><a href="#" onclick="doForgotPassword(); return false;" style="font-size:12px; color:var(--ink-soft); text-decoration:underline;">Nakalimutan ang password?</a></div>
         <div id="auth-error" style="color:var(--clay);font-size:12px;margin-top:10px;text-align:center;"></div>
       </div>
 
@@ -718,7 +733,13 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
           <li><span class="num">🏫</span><span><strong>Paaralan:</strong> Regis Marie College, Parañaque City</span></li>
         </ul>
 
-        <h4>Tungkol sa Plant Database</h4>
+        <h4 style="margin-top:20px;">⚠️ Medical Disclaimer</h4>
+        <p>Ang impormasyong ibinibigay ng application na ito ay <strong>para sa layuning pang-edukasyon lamang</strong> at hindi dapat ituring na kapalit ng propesyonal na medikal na payo, diagnosis, o paggamot. Palaging kumonsulta sa doktor o lisensyadong healthcare provider bago gumamit ng anumang halamang gamot, lalo na kung ikaw ay buntis, nagpapasuso, umiinom ng ibang gamot, o may umiiral na kondisyong medikal. Ang mga developer ng system na ito ay hindi mananagot sa anumang epekto ng paggamit ng impormasyong nakalagay dito.</p>
+
+        <h4 style="margin-top:20px;">🔒 Privacy Notice</h4>
+        <p>Kapag gumawa ka ng account, ang iyong email address, mga na-save na halaman, at history ng scan ay naka-store sa Firebase Firestore (cloud database ni Google) upang ma-access mo ang mga ito kahit saang device. Hindi ibinabahagi ang iyong impormasyon sa ibang third party. Ang mga larawang ini-scan mo ay pinoproseso lamang sa loob ng iyong sariling browser (client-side AI) at hindi ipinapadala o ini-store sa alinmang external server maliban na lang kung ikaw mismo ay mag-a-upload nito bilang training photo sa Admin Panel.</p>
+
+        <h4 style="margin-top:20px;">Tungkol sa Plant Database</h4>
         <p>Ang plant information ay naka-store sa <strong>Firebase Firestore</strong>, isang cloud database — instant na naa-access ng app kahit saan, at pwede itong i-update nang hindi kailangang baguhin ang code. Kung hindi pa naka-connect, gumagamit ang app ng local copy ng datos para tuloy-tuloy pa rin ang demo.</p>
         <div id="db-status-badge" class="db-status-badge db-offline"><span class="dbdot"></span>Checking database...</div>
         <button onclick="retryFirestoreConnection()" style="display:block;margin:8px 0 0;background:none;border:1px solid var(--line);color:var(--forest);font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;font-family:'Inter';">🔄 Ulitin ang Koneksyon</button>
@@ -764,6 +785,16 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
     </div>
 
     <!-- Admin edit overlay -->
+    <div id="disclaimer-overlay" style="display:none;position:fixed;inset:0;background:rgba(20,15,10,0.65);z-index:300;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+      <div style="background:var(--parchment);width:100%;max-width:380px;max-height:85vh;overflow-y:auto;border-radius:20px;padding:22px 20px;">
+        <div style="font-size:34px;text-align:center;margin-bottom:6px;">⚠️</div>
+        <h3 style="font-family:'Fraunces';color:var(--forest);font-size:17px;text-align:center;margin-bottom:12px;">Mahalagang Paalala</h3>
+        <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;">Ang app na ito ay <strong>para sa layuning pang-edukasyon lamang</strong>. Hindi ito kapalit ng propesyonal na medikal na payo. Palaging kumonsulta sa doktor bago gumamit ng anumang halamang gamot, lalo na kung buntis, nagpapasuso, o may kondisyong medikal.</p>
+        <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-top:10px;">Ang iyong email, na-save na halaman, at history ay naka-store sa isang secure cloud database (Firebase) para lang sa paggana ng app — hindi ito ibinabahagi sa ibang partido.</p>
+        <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:16px;width:100%;box-sizing:border-box;" onclick="dismissDisclaimer()">Nauunawaan Ko, Magpatuloy</button>
+      </div>
+    </div>
+
     <div id="admin-editor-overlay" style="display:none;position:fixed;inset:0;background:rgba(20,15,10,0.55);z-index:200;align-items:flex-end;justify-content:center;">
       <div style="background:var(--parchment);width:100%;max-width:390px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:20px 20px 30px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -783,14 +814,23 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
           <label class="admin-label">Benepisyo (isang linya bawat isa)<textarea id="admin-f-benefits" class="admin-input" rows="3"></textarea></label>
           <label class="admin-label">Paraan ng Paggamit (isang hakbang bawat linya)<textarea id="admin-f-prep" class="admin-input" rows="4" placeholder="Hal:&#10;Kumuha ng 5 sariwang dahon&#10;Pakuluan sa 2 tasang tubig ng 10 minuto&#10;Inumin nang 2 beses araw-araw"></textarea></label>
           <label class="admin-label">Paalala/Caution<textarea id="admin-f-caution" class="admin-input" rows="2"></textarea></label>
+          <label class="admin-label">Source/Reference (opsyonal)<input type="text" id="admin-f-source" class="admin-input" placeholder="Hal. DOH, PITAHC, o pangalan ng libro/journal"></label>
         </div>
 
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+          <div class="admin-label" style="margin-bottom:8px;">🖼️ Kasalukuyang Larawan (nakikita sa app)</div>
+          <div id="admin-current-photo-preview" style="margin-bottom:8px;"></div>
+        </div>
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
           <div class="admin-label" style="margin-bottom:8px;">🧠 AI Training Photos <span id="admin-f-sample-count" style="font-weight:400;color:var(--ink-soft);">(0 samples)</span></div>
           <div class="thumbs" id="admin-f-thumbs" style="margin-bottom:8px;"></div>
           <button class="reset-ai-btn" style="background:var(--gold-deep);color:#fff;border:none;" onclick="document.getElementById('admin-f-photos-input').click()">📷 Magdagdag ng Larawan (para sa pagkilala)</button>
           <input type="file" id="admin-f-photos-input" accept="image/*" multiple style="display:none;" onchange="handleAdminPhotoUpload(event)">
           <div id="admin-f-photo-progress" style="display:none;margin-top:8px;font-size:11.5px;color:var(--forest);font-weight:700;text-align:center;"></div>
+          <label class="admin-label" style="display:flex; align-items:center; gap:8px; margin-top:12px; font-weight:400;">
+            <input type="checkbox" id="admin-f-hide-photo" style="width:16px; height:16px;">
+            Itago ang larawan sa Library/Detail (panatilihin ang AI training data para sa pagkilala)
+          </label>
         </div>
 
         <button class="reset-ai-btn" style="background:var(--forest);color:#fff;border:none;margin-top:16px;" onclick="saveAdminPlant()">I-save</button>
@@ -1568,6 +1608,8 @@ function openAdminEditor(id){
     document.getElementById('admin-f-benefits').value = '';
     document.getElementById('admin-f-prep').value = '';
     document.getElementById('admin-f-caution').value = '';
+    document.getElementById('admin-f-source').value = '';
+    document.getElementById('admin-f-hide-photo').checked = false;
   } else {
     adminEditingId = id;
     const p = PLANTS.find(x=>x.id===id);
@@ -1583,6 +1625,8 @@ function openAdminEditor(id){
     document.getElementById('admin-f-benefits').value = (p.benefits||[]).join('\n');
     document.getElementById('admin-f-prep').value = p.prep;
     document.getElementById('admin-f-caution').value = p.caution;
+    document.getElementById('admin-f-source').value = p.source || '';
+    document.getElementById('admin-f-hide-photo').checked = !!p.hidePhoto;
   }
   renderAdminEditorThumbs();
   document.getElementById('admin-editor-overlay').style.display = 'flex';
@@ -1594,6 +1638,75 @@ function renderAdminEditorThumbs(){
   const countEl = document.getElementById('admin-f-sample-count');
   if(thumbsEl) thumbsEl.innerHTML = samples.slice(0,8).map(s=>`<img src="${s.thumb}">`).join('');
   if(countEl) countEl.textContent = `(${samples.length} sample${samples.length===1?'':'s'})`;
+  renderAdminCurrentPhotoPreview();
+}
+
+/* Shows whatever photo is CURRENTLY being displayed to visitors for this
+   plant (same logic as plantVisualHTML: first training sample, unless
+   hidePhoto is on), with its own dedicated delete button. Deleting here
+   takes effect immediately — sets hidePhoto=true and saves straight to
+   Firestore right away — separate from the training samples below, which
+   stay completely untouched and keep working for AI recognition either way. */
+function renderAdminCurrentPhotoPreview(){
+  const previewEl = document.getElementById('admin-current-photo-preview');
+  if(!previewEl) return;
+  const p = PLANTS.find(x=>x.id===adminEditingId);
+  const samples = trainingData[adminEditingId] || [];
+  const isHidden = p ? !!p.hidePhoto : false;
+  if(samples.length===0){
+    previewEl.innerHTML = `<div style="font-size:12px; color:var(--ink-soft);">Wala pang larawan (wala pang training photo). Awtomatikong gagamitin ang unang training photo bilang display photo kapag nagdagdag ka na sa ibaba.</div>`;
+  } else if(isHidden){
+    previewEl.innerHTML = `<div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--parchment-dark);display:flex;align-items:center;justify-content:center;">${leafSVG((p?p.color:0), 32)}</div>
+      <div style="flex:1; font-size:12px; color:var(--ink-soft);">Nakatago ang larawan ngayon (generic icon ang lumalabas). Training data ay buo pa rin.</div>
+      <button class="btn-secondary" style="font-size:11px; padding:8px 10px;" onclick="restoreCurrentPhotoNow()">Ibalik ang Larawan</button>
+    </div>`;
+  } else {
+    previewEl.innerHTML = `<div style="display:flex; align-items:center; gap:10px;">
+      <img src="${samples[0].thumb}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
+      <div style="flex:1; font-size:12px; color:var(--ink-soft);">Ito ang lumalabas na larawan sa Library, Detail, at Scan Result.</div>
+      <button class="btn-secondary" style="font-size:11px; padding:8px 10px; color:#b91c1c; border-color:#b91c1c;" onclick="deleteCurrentPhotoNow()">🗑️ Alisin</button>
+    </div>`;
+  }
+}
+
+/* Instantly hides the display photo (sets hidePhoto=true) and saves right
+   away — the person doesn't have to remember to also press the big form
+   "Save" button at the bottom for this specific action to take effect.
+   Training samples are NEVER touched by this — only which photo (if any)
+   is shown to visitors. */
+async function deleteCurrentPhotoNow(){
+  if(adminEditingId==null) return;
+  if(!confirm('Alisin ang larawang ito sa Library/Detail/Scan Result? Mananatili ang AI training data — hindi maaapektuhan ang recognition.')) return;
+  await setHidePhotoNow(true);
+}
+async function restoreCurrentPhotoNow(){
+  if(adminEditingId==null) return;
+  await setHidePhotoNow(false);
+}
+async function setHidePhotoNow(hide){
+  const p = PLANTS.find(x=>x.id===adminEditingId);
+  if(!p) return;
+  p.hidePhoto = hide;
+  const hideCheckbox = document.getElementById('admin-f-hide-photo');
+  if(hideCheckbox) hideCheckbox.checked = hide;
+
+  // Same offline-safe save path used everywhere else: local-first, then
+  // Firestore — so this takes effect on every device, not just this one.
+  const overrides = getLocalPlantOverrides();
+  overrides[String(p.id)] = p;
+  setLocalPlantOverrides(overrides);
+  if(!firestoreConnected && isFirebaseConfigured()) initFirebase();
+  if(firestoreConnected){
+    try{
+      await firestoreDB.collection(PLANTS_COLLECTION).doc(String(p.id)).set(p);
+      const o2 = getLocalPlantOverrides(); delete o2[String(p.id)]; setLocalPlantOverrides(o2);
+    }catch(e){
+      console.warn('Could not sync photo visibility change yet:', e);
+    }
+  }
+  renderAdminCurrentPhotoPreview();
+  renderHome(); filterLibrary(); renderAdminList();
 }
 
 async function handleAdminPhotoUpload(evt){
@@ -1654,6 +1767,8 @@ async function saveAdminPlant(){
     benefits: document.getElementById('admin-f-benefits').value.split('\n').map(s=>s.trim()).filter(Boolean),
     prep: document.getElementById('admin-f-prep').value.trim(),
     caution: document.getElementById('admin-f-caution').value.trim(),
+    source: document.getElementById('admin-f-source').value.trim(),
+    hidePhoto: document.getElementById('admin-f-hide-photo').checked,
     // Record WHEN this entry was first created — kept as-is on every future
     // edit (only a brand-new plant gets a fresh timestamp), so "Bagong
     // Idinagdag" and the detail-page date always reflect the true add date,
@@ -1770,7 +1885,11 @@ function leafSVG(colorIdx, size){
    photo once the user has trained that plant at least once. */
 function plantVisualHTML(p, size){
   const samples = trainingData[p.id];
-  if(samples && samples.length>0){
+  // hidePhoto lets the admin hide the displayed photo (revert to the
+  // generic leaf icon) WITHOUT touching the underlying AI training
+  // samples — the scanner keeps using those samples for recognition
+  // exactly as before; only what's SHOWN to visitors changes.
+  if(!p.hidePhoto && samples && samples.length>0){
     return `<img src="${samples[0].thumb}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:50%;display:block;">`;
   }
   return leafSVG(p.color, size);
@@ -1779,10 +1898,10 @@ function plantVisualHTML(p, size){
 /* Large, full-cover version of the plant photo used for the Detail screen hero
    banner — fills the whole hero area instead of a small circular thumbnail.
    Falls back to a big centered leaf icon on a themed gradient when no trained
-   photo is available yet for that plant. */
+   photo is available yet for that plant, or when the admin has chosen to hide it. */
 function heroVisualHTML(p){
   const samples = trainingData[p.id];
-  if(samples && samples.length>0){
+  if(!p.hidePhoto && samples && samples.length>0){
     return `<img src="${samples[0].thumb}" alt="${p.name}">`;
   }
   const pal = LEAF_PALETTES[p.color % LEAF_PALETTES.length];
@@ -1906,6 +2025,18 @@ async function doLogin(){
     showAuthError(authErrorToTagalog(e));
   }
 }
+async function doForgotPassword(){
+  showAuthError('');
+  const email = document.getElementById('auth-email').value.trim();
+  if(!email){ showAuthError('I-type muna ang email mo sa itaas, tapos pindutin ulit ang "Nakalimutan ang password?".'); return; }
+  if(!firestoreConnected || !firebase.auth){ showAuthError('Hindi pa naka-connect sa Firebase. Subukan ulit mamaya.'); return; }
+  try{
+    await firebase.auth().sendPasswordResetEmail(email);
+    showAuthError('✅ Naipadala na ang link ng pag-reset ng password sa ' + email + '. Tignan ang inbox (o spam folder).');
+  }catch(e){
+    showAuthError(authErrorToTagalog(e));
+  }
+}
 function doLogout(){
   if(firebase.auth) firebase.auth().signOut();
   bookmarkedIds = new Set();
@@ -2016,35 +2147,48 @@ function renderSavedSection(){
 let stream = null;
 let capturedDataUrl = null;
 let lastMatchedPlant = null;
+let lastMatchedConfidence = null;
 // When set, the NEXT successful scan is treated as the second half of a
 // "Compare" (side-by-side) request instead of a normal single result —
 // see startCompareScan() and showCompareResult().
 let compareModeFirstPlant = null;
+let compareModeFirstConfidence = null;
 function startCompareScan(){
   if(!lastMatchedPlant){ alert('Mag-scan muna ng unang halaman.'); return; }
   compareModeFirstPlant = lastMatchedPlant;
+  compareModeFirstConfidence = lastMatchedConfidence;
   goToScan();
 }
 /* Renders a small info block for one side of the Compare screen — reused
    for both the first and second scanned plant so the two columns always
-   look identical in structure, easy to eyeball side by side. */
-function compareCardHTML(p){
+   look identical in structure, easy to eyeball side by side. Now also
+   shows each plant's confidence level, so the comparison makes clear not
+   just WHAT was matched but HOW SURE the AI was about each one. */
+function compareCardHTML(p, confidence){
   const topUses = (p.uses||[]).slice(0,3);
   const topBenefits = (p.benefits||[]).slice(0,2);
+  const confBadge = (typeof confidence === 'number')
+    ? `<div class="confidence" style="margin-top:8px;">
+         <div class="bar-bg"><div class="bar-fill" style="width:${confidence}%;"></div></div>
+         <div class="pct-row"><span>Confidence</span><span>${confidence}%</span></div>
+       </div>`
+    : '';
   return `
     <div class="icon-wrap">${plantVisualHTML(p,64)}</div>
     <h2 style="font-size:15px; margin-top:8px;">${p.name}</h2>
     <div class="sci" style="font-size:11px;">${p.sci}</div>
     <span class="tag" style="margin-top:6px;">${p.cat}</span>
+    ${confBadge}
     ${topUses.length? `<h4 style="font-size:11.5px; margin-top:10px;">Medisinal na Gamit</h4><ul style="text-align:left; font-size:11.5px; padding-left:16px; margin:4px 0;">${topUses.map(u=>`<li>${u}</li>`).join('')}</ul>` : ''}
     ${topBenefits.length? `<h4 style="font-size:11.5px; margin-top:8px;">Benepisyo</h4><ul style="text-align:left; font-size:11.5px; padding-left:16px; margin:4px 0;">${topBenefits.map(b=>`<li>${b}</li>`).join('')}</ul>` : ''}
     <button class="btn-secondary" style="width:100%; margin-top:10px; font-size:12px; padding:8px;" onclick="openDetail(${p.id},'compare')">Buong Detalye</button>
   `;
 }
-function showCompareResult(plantA, plantB){
-  document.getElementById('compare-card-1').innerHTML = compareCardHTML(plantA);
-  document.getElementById('compare-card-2').innerHTML = compareCardHTML(plantB);
+function showCompareResult(plantA, confA, plantB, confB){
+  document.getElementById('compare-card-1').innerHTML = compareCardHTML(plantA, confA);
+  document.getElementById('compare-card-2').innerHTML = compareCardHTML(plantB, confB);
   compareModeFirstPlant = null;
+  compareModeFirstConfidence = null;
   showScreen('compare');
 }
 let recognition = null;
@@ -2577,9 +2721,142 @@ function openDetail(id, from){
     dateEl.textContent = p.dateAdded
       ? 'Idinagdag noong: ' + new Date(p.dateAdded).toLocaleString('en-PH', {year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'})
       : '';
+    if(p.source) dateEl.textContent += (dateEl.textContent ? ' · ' : '') + 'Batay sa: ' + p.source;
   }
+  pendingStarRating = 0;
+  renderReviews(p);
+  renderRelatedPlants(p);
   updateSaveButtonUI(id);
   showScreen('detail');
+}
+
+/* Simple "you might also want to check" list: other plants in the same
+   category, excluding the one currently being viewed. Helps people
+   discover plants they didn't think to search for directly (e.g. viewing
+   one cough remedy surfaces other cough remedies in the same category). */
+function renderRelatedPlants(p){
+  const carousel = document.getElementById('related-plants-carousel');
+  if(!carousel) return;
+  const related = PLANTS.filter(x=>x.id!==p.id && x.cat===p.cat).slice(0,8);
+  if(related.length===0){
+    carousel.innerHTML = `<div style="font-size:12px; color:var(--ink-soft);">Wala pang ibang halaman sa parehong kategorya (${p.cat}).</div>`;
+    return;
+  }
+  carousel.innerHTML = related.map(r=>specCard(r)).join('');
+}
+
+/* ================= RATINGS & COMMENTS =================
+   Reviews are stored directly on each plant's own document as a
+   "reviews" array (each entry: {name, rating, comment, timestamp}). This
+   keeps things simple — no extra Firestore subcollection to manage — and
+   it automatically benefits from the same live onSnapshot sync already in
+   place for PLANTS, so a new comment/rating posted by anyone appears for
+   everyone else with the app open, no refresh needed, same as new plants. */
+let pendingStarRating = 0;
+
+function starRowHTML(current, size, onClickFnName){
+  let html = '';
+  for(let i=1;i<=5;i++){
+    const filled = i<=current;
+    const clickAttr = onClickFnName ? `onclick="${onClickFnName}(${i})" style="cursor:pointer;"` : '';
+    html += `<svg viewBox="0 0 24 24" width="${size}" height="${size}" ${clickAttr} style="${onClickFnName?'cursor:pointer;':''}">
+      <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" fill="${filled?'var(--gold-deep)':'none'}" stroke="var(--gold-deep)" stroke-width="1.5"/>
+    </svg>`;
+  }
+  return html;
+}
+
+function selectStarRating(n){
+  pendingStarRating = n;
+  const holder = document.getElementById('review-star-picker');
+  if(holder) holder.innerHTML = starRowHTML(pendingStarRating, 26, 'selectStarRating');
+}
+
+function renderReviews(p){
+  const reviews = (p.reviews||[]).slice().sort((a,b)=> b.timestamp - a.timestamp);
+
+  // ---- Average rating summary ----
+  const summaryEl = document.getElementById('reviews-summary');
+  if(reviews.length===0){
+    summaryEl.innerHTML = `<div style="font-size:12.5px; color:var(--ink-soft);">Wala pang rating o komento. Maging unang mag-review!</div>`;
+  } else {
+    const avg = reviews.reduce((a,r)=>a+r.rating,0) / reviews.length;
+    summaryEl.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex;">${starRowHTML(Math.round(avg), 18, null)}</div>
+        <strong style="font-size:14px;">${avg.toFixed(1)}</strong>
+        <span style="font-size:12px; color:var(--ink-soft);">(${reviews.length} review${reviews.length===1?'':'s'})</span>
+      </div>`;
+  }
+
+  // ---- Add-review form (only if logged in) ----
+  const formEl = document.getElementById('reviews-form-area');
+  if(currentUser){
+    formEl.innerHTML = `
+      <div style="font-size:12px; font-weight:700; margin-bottom:6px;">Mag-rate at Mag-comment</div>
+      <div id="review-star-picker" style="display:flex; gap:2px; margin-bottom:8px;">${starRowHTML(pendingStarRating, 26, 'selectStarRating')}</div>
+      <textarea id="review-comment-input" class="admin-input" rows="2" placeholder="Isulat ang karanasan/tanong mo tungkol sa halamang ito..." style="width:100%; box-sizing:border-box;"></textarea>
+      <button class="compare-trigger-btn" style="margin-top:8px;" onclick="submitReview(${p.id})">I-post ang Review</button>
+    `;
+  } else {
+    formEl.innerHTML = `<div style="font-size:12.5px; color:var(--ink-soft); text-align:center;">Mag-<a href="#" onclick="showScreen('account'); return false;" style="color:var(--forest); font-weight:700;">login</a> muna para makapag-rate o magkomento.</div>`;
+  }
+
+  // ---- Existing reviews list ----
+  const listEl = document.getElementById('reviews-list');
+  if(reviews.length===0){
+    listEl.innerHTML = '';
+  } else {
+    listEl.innerHTML = reviews.map(r=>{
+      const dateStr = new Date(r.timestamp).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'});
+      return `<div style="border-bottom:1px solid var(--line); padding:10px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:12.5px;">${r.name}</strong>
+          <span style="font-size:10.5px; color:var(--ink-soft);">${dateStr}</span>
+        </div>
+        <div style="display:flex; margin:3px 0;">${starRowHTML(r.rating, 14, null)}</div>
+        ${r.comment ? `<div style="font-size:12.5px; color:var(--ink-soft); margin-top:2px;">${r.comment}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+async function submitReview(plantId){
+  if(!currentUser){ alert('Mag-login muna para makapag-rate o magkomento.'); return; }
+  if(pendingStarRating < 1){ alert('Pumili muna ng bituin (1-5) bilang rating.'); return; }
+  const commentInput = document.getElementById('review-comment-input');
+  const comment = (commentInput?.value || '').trim();
+
+  const plant = PLANTS.find(p=>p.id===plantId);
+  if(!plant) return;
+
+  const newReview = {
+    name: currentUser.email ? currentUser.email.split('@')[0] : 'User',
+    rating: pendingStarRating,
+    comment,
+    timestamp: Date.now()
+  };
+
+  // Update locally right away so it feels instant, then push to Firestore.
+  plant.reviews = [...(plant.reviews||[]), newReview];
+  pendingStarRating = 0;
+  renderReviews(plant);
+
+  // Persist through the SAME offline-safe path used for admin plant edits —
+  // saves locally first, syncs to Firestore when connected, and auto-syncs
+  // later if it isn't connected right this moment.
+  const overrides = getLocalPlantOverrides();
+  overrides[String(plantId)] = plant;
+  setLocalPlantOverrides(overrides);
+  if(!firestoreConnected && isFirebaseConfigured()) initFirebase();
+  if(firestoreConnected){
+    try{
+      await firestoreDB.collection(PLANTS_COLLECTION).doc(String(plantId)).set(plant);
+      const o2 = getLocalPlantOverrides(); delete o2[String(plantId)]; setLocalPlantOverrides(o2);
+    }catch(e){
+      console.warn('Could not sync review to Firestore yet:', e);
+    }
+  }
 }
 
 /* Lets the person download a plant's full info as a plain text file — no
@@ -2913,10 +3190,10 @@ async function runAnalysis(canvas){
     if(match.notHerbal){
       // In compare mode, a failed second scan just cancels compare mode
       // instead of leaving the person stuck — they can start over.
-      if(compareModeFirstPlant){ compareModeFirstPlant = null; }
+      if(compareModeFirstPlant){ compareModeFirstPlant = null; compareModeFirstConfidence = null; }
       showNotHerbalResult(match.alts);
     } else if(compareModeFirstPlant){
-      showCompareResult(compareModeFirstPlant, match.plant);
+      showCompareResult(compareModeFirstPlant, compareModeFirstConfidence, match.plant, match.confidence);
     } else {
       showResult(match.plant, match.confidence, match.mode, match.alts, match.lowConfidence);
     }
@@ -3046,7 +3323,25 @@ function matchWithAI(canvas){
     // either because the top match barely beats the runner-up, or the raw
     // similarity itself is very weak overall.
     const margin = ranked.length>1 ? (top.sim - ranked[1].sim) : top.sim;
-    const lowConfidence = confidence < 55;
+    // ⚠️ BUG FIX: previously this only checked the softmax "confidence %",
+    // and never actually used `margin` despite the comment above saying it
+    // should. This is exactly why a borderline scan (e.g. two genuinely
+    // similar-looking leaves like Lagundi vs Rosal) could get confidently
+    // declared as the WRONG plant at a high-looking %: the softmax
+    // temperature is tuned to make even a tiny raw-similarity gap look like
+    // a decisive win, so the displayed percentage didn't reflect how close
+    // the raw call actually was.
+    //
+    // TUNING NEEDED: MARGIN_THRESHOLD was not verified against real photos.
+    // Test it: scan two plants you know look alike (or a screen-photo of one
+    // vs the real leaf of the other) and check the "[AI] margin between
+    // top-1 and top-2" console log each time. If a wrong plant still gets
+    // confidently shown (no warning) despite a close real call, RAISE this
+    // value. If genuinely easy, unambiguous scans start getting flagged as
+    // low-confidence when they shouldn't be, LOWER it.
+    const MARGIN_THRESHOLD = 0.03;
+    console.log('[AI] margin between top-1 and top-2:', margin.toFixed(3), '(low-confidence threshold:', MARGIN_THRESHOLD, ')');
+    const lowConfidence = confidence < 55 || margin < MARGIN_THRESHOLD;
     return {plant: top.plant, confidence, mode:'real', alts, lowConfidence};
   }catch(e){
     console.warn('AI match error, falling back to demo mode:', e);
@@ -3091,6 +3386,7 @@ function showResult(plant, confidence, mode, alts, lowConfidence){
   document.getElementById('result-not-herbal-card').style.display = 'none';
 
   lastMatchedPlant = plant;
+  lastMatchedConfidence = confidence;
   logScanHistory(plant, confidence, mode);
   document.getElementById('result-icon').innerHTML = plantVisualHTML(plant,100);
   document.getElementById('result-name').textContent = plant.name;
@@ -3252,6 +3548,21 @@ window.addEventListener('appinstalled', () => {
   btn.onclick = function(){
     alert('Paano i-install sa iPhone:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.');
   };
+})();
+
+/* ================= MEDICAL DISCLAIMER (shown once per device) ================= */
+const DISCLAIMER_SEEN_KEY = 'herbalIS_disclaimerSeen_v1';
+function dismissDisclaimer(){
+  try{ localStorage.setItem(DISCLAIMER_SEEN_KEY, '1'); }catch(e){}
+  document.getElementById('disclaimer-overlay').style.display = 'none';
+}
+(function showDisclaimerIfNeeded(){
+  let seen = false;
+  try{ seen = localStorage.getItem(DISCLAIMER_SEEN_KEY) === '1'; }catch(e){}
+  if(!seen){
+    const el = document.getElementById('disclaimer-overlay');
+    if(el) el.style.display = 'flex';
+  }
 })();
 </script>
 </body>
