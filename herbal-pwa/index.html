@@ -428,7 +428,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
           <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M20 8V6a2 2 0 00-2-2h-2M20 16v2a2 2 0 01-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg>
           Simulan ang Scan
         </button>
-        <button id="install-app-btn" onclick="installApp()" style="display:none;margin-top:10px;margin-left:8px;background:rgba(255,255,255,0.14);color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:30px;border:1px solid rgba(255,255,255,0.3);cursor:pointer;align-items:center;gap:7px;">
+        <button id="install-app-btn" onclick="installApp()" style="display:inline-flex;margin-top:10px;margin-left:8px;background:rgba(255,255,255,0.14);color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:30px;border:1px solid rgba(255,255,255,0.3);cursor:pointer;align-items:center;gap:7px;">
           <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:#fff;fill:none;stroke-width:2;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
           <span id="install-app-btn-label">I-install ang App</span>
         </button>
@@ -745,6 +745,7 @@ p{ line-height:1.55; color:var(--ink-soft); margin:0; }
         <button onclick="retryFirestoreConnection()" style="display:block;margin:8px 0 0;background:none;border:1px solid var(--line);color:var(--forest);font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;font-family:'Inter';">🔄 Ulitin ang Koneksyon</button>
         <br>
         <button class="seed-db-btn" onclick="seedFirestore()">☁️ I-upload ang Plant Data sa Firestore</button>
+        <button onclick="resetLocalPlantCache()" style="display:block;margin:10px 0 0;background:none;border:1px solid rgba(185,28,28,0.4);color:#b91c1c;font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;font-family:'Inter';">🧹 I-reset ang Lokal na Cache (kung may nawawalang halaman)</button>
 
         <h4 style="margin-top:20px;">Tungkol sa AI Plant Scanner</h4>
         <p>Gumagamit ang scanner ng <strong>MobileNet</strong>, isang pre-trained deep learning/CNN model, bilang feature extractor — direkta itong tumatakbo sa loob ng browser/app gamit ang TensorFlow.js, walang kailangang external server. Ang bawat larawang naka-scan ay ikinukumpara (k-Nearest Neighbors classification) sa mga sample photo na na-train sa "Train AI" tab. Ito ang tinatawag na <em>transfer learning</em> — isang praktikal na paraan ng image classification na hindi nangangailangan ng malaking dataset o GPU training mula sa simula, angkop para sa mobile-based application.</p>
@@ -1199,6 +1200,23 @@ function applyLocalPlantOverrides(){
 }
 applyLocalPlantOverrides();
 
+/* Manual troubleshooting escape hatch, exposed as a button in the About
+   tab: wipes this device's local plant-override/delete cache entirely and
+   re-pulls straight from Firestore. Useful if a device ever ends up
+   showing fewer plants than it should (stale local state that the
+   automatic self-heal in subscribeToPlantsLive somehow didn't already
+   catch) — this guarantees a full reset back to whatever Firestore
+   actually has, no waiting required. */
+function resetLocalPlantCache(){
+  if(!confirm('I-reset ang lokal na cache ng device na ito? Kukunin ulit ang lahat ng plant data mula sa Firestore. Hindi ito magbabago sa Firestore mismo — ligtas ito.')) return;
+  try{
+    localStorage.removeItem(LOCAL_PLANT_OVERRIDES_KEY);
+    localStorage.removeItem(LOCAL_PLANT_DELETES_KEY);
+  }catch(e){}
+  alert('Na-clear na ang lokal na cache. Kukunin ulit ang datos mula Firestore.');
+  subscribeToPlantsLive();
+}
+
 /* Push every pending local-only change to Firestore. Safe to call anytime —
    it no-ops if there's nothing pending or if Firestore isn't connected yet.
    Called automatically right after a connection is (re)established. */
@@ -1406,6 +1424,33 @@ function subscribeToPlantsLive(){
       const cloudPlants = [];
       snap.forEach(doc=> cloudPlants.push(doc.data()));
       cloudPlants.sort((a,b)=> a.id - b.id);
+
+      // ================= STALE LOCAL-DELETE SELF-HEAL =================
+      // BUG THIS FIXES: a plant that this SPECIFIC device once marked as
+      // "delete me locally, sync it later" (see deleteAdminPlant /
+      // LOCAL_PLANT_DELETES_KEY) would stay hidden on this device FOREVER,
+      // even after Firestore's real, live, authoritative data clearly still
+      // contains that plant (e.g. it was never actually deleted, the delete
+      // was undone, or it was re-added from a different device). Since
+      // applyLocalPlantOverrides() re-filters PLANTS on every single live
+      // snapshot update, a device with several stale delete entries could
+      // end up hiding almost everything — this is what caused "39 plants
+      // collapsing down to just 1" on one specific device/install, and why
+      // a review left on a hidden plant seemed to vanish (the whole plant,
+      // reviews included, was being filtered out on that device).
+      // FIX: every time we get a FRESH, authoritative snapshot straight
+      // from Firestore, treat it as the source of truth — if a plant this
+      // device once wanted to delete is still genuinely present in that
+      // snapshot, the local delete is stale/no-longer-relevant, so clear it
+      // instead of continuing to hide that plant forever.
+      const cloudIds = new Set(cloudPlants.map(p=>String(p.id)));
+      const currentDeletes = getLocalPlantDeletes();
+      const staleDeletes = currentDeletes.filter(id=>cloudIds.has(id));
+      if(staleDeletes.length){
+        setLocalPlantDeletes(currentDeletes.filter(id=>!cloudIds.has(id)));
+        console.log('[Sync self-heal] Cleared', staleDeletes.length, 'stale local delete(s) on this device — plant(s) still exist in Firestore:', staleDeletes);
+      }
+
       PLANTS = cloudPlants;
       applyLocalPlantOverrides();
       plantsRetryCount = 0;
@@ -2257,8 +2302,36 @@ async function resetAIModel(){
 
 function computeEmbeddingFromElement(el){
   if(!mobilenetModel) return null;
+  // ================= SCREEN-SCAN ROBUSTNESS PREPROCESSING =================
+  // WHY THIS EXISTS: scanning a PHOTO OF A PLANT displayed on another
+  // screen (laptop monitor, another phone) — instead of a real, in-person
+  // leaf — introduces a moiré interference pattern (from the camera's
+  // sensor grid overlapping the screen's own pixel grid) plus glare and
+  // screen color-rendering shifts. None of these exist in a real leaf
+  // photo, and they can confuse the AI into matching the wrong plant (this
+  // is what caused a screen-photo of Lagundi to be misidentified as Rosal).
+  //
+  // FIX: apply a very slight blur before feature extraction. This smooths
+  // out the fine, high-frequency moiré noise without meaningfully changing
+  // the broader shape/texture/color pattern MobileNet actually bases its
+  // features on — so it helps with screen-photo artifacts while barely
+  // affecting real leaf photos at all. Applied here means it's automatic
+  // for EVERY plant (all training photos AND every live scan go through
+  // this same function), not just one — and consistently for both training
+  // and inference, so they stay on equal footing.
+  //
+  // ⚠️ Not a full fix — a real leaf, scanned in person with good lighting,
+  // will always be recognized more reliably than a photo-of-a-screen. This
+  // reduces the gap; it doesn't erase it. Training with more diverse sample
+  // photos per plant remains the biggest lever for accuracy overall.
+  const prepped = document.createElement('canvas');
+  prepped.width = el.width || el.videoWidth || 220;
+  prepped.height = el.height || el.videoHeight || 220;
+  const pctx = prepped.getContext('2d');
+  try{ pctx.filter = 'blur(1px)'; }catch(e){ /* filter unsupported — proceed unblurred */ }
+  pctx.drawImage(el, 0, 0, prepped.width, prepped.height);
   return tf.tidy(()=>{
-    const t = mobilenetModel.infer(el, true);
+    const t = mobilenetModel.infer(prepped, true);
     return Array.from(t.dataSync());
   });
 }
@@ -3504,7 +3577,20 @@ if('requestIdleCallback' in window){
 // so Home/Library/History all have real data as soon as possible.
 initFirebase();
 
-/* ================= PWA: service worker + install prompt ================= */
+/* ================= PWA: service worker + install prompt =================
+   PROBLEM THIS FIXES: the install button used to stay hidden by default,
+   only appearing if the browser fired 'beforeinstallprompt' — but that
+   event ONLY exists on Chromium-based browsers (Chrome/Edge/Samsung
+   Internet on Android, Chrome/Edge on desktop) and even then only once
+   certain engagement conditions are met. On iOS Safari, desktop Safari,
+   Firefox, and various other browsers, that event never fires — so the
+   button simply never showed up, leaving no way at all to discover how to
+   install on those devices.
+   FIX: the button is now ALWAYS visible. If the native install prompt IS
+   available (Chromium path), clicking it uses that, same as before. If
+   it's NOT available, clicking it shows clear step-by-step instructions
+   tailored to whichever browser/OS was detected, so every device has SOME
+   way to find out how to add the app to their home screen. */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').catch(()=>{});
@@ -3515,40 +3601,70 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  const btn = document.getElementById('install-app-btn');
-  if (btn) btn.style.display = 'inline-flex';
+  const label = document.getElementById('install-app-btn-label');
+  if(label) label.textContent = 'I-install ang App';
 });
-function installApp(){
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  deferredInstallPrompt.userChoice.finally(() => {
-    deferredInstallPrompt = null;
-    const btn = document.getElementById('install-app-btn');
-    if (btn) btn.style.display = 'none';
-  });
-}
 window.addEventListener('appinstalled', () => {
   const btn = document.getElementById('install-app-btn');
   if (btn) btn.style.display = 'none';
 });
 
-/* iOS Safari never fires 'beforeinstallprompt' — there is no programmatic
-   install API there. Show manual "Add to Home Screen" instructions instead,
-   so iPhone users still see how to install rather than the button just
-   silently never appearing. */
-(function setupIOSInstallHint(){
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isInStandaloneMode = window.navigator.standalone === true;
-  if(!isIOS || isInStandaloneMode) return;
-  const btn = document.getElementById('install-app-btn');
-  if(!btn) return;
-  btn.style.display = 'inline-flex';
-  const label = document.getElementById('install-app-btn-label');
-  if(label) label.textContent = 'Paano mag-install (iPhone)';
-  btn.onclick = function(){
-    alert('Paano i-install sa iPhone:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.');
-  };
+/* Hide the button entirely if the app is already running installed
+   (standalone mode) — no point offering to install what's already
+   installed. Covers both the standard check and iOS Safari's own flag. */
+(function hideInstallBtnIfAlreadyInstalled(){
+  const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  const isIOSStandalone = window.navigator.standalone === true;
+  if(isStandalone || isIOSStandalone){
+    const btn = document.getElementById('install-app-btn');
+    if(btn) btn.style.display = 'none';
+  }
 })();
+
+function detectPlatformForInstall(){
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = /android/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isFirefox = /firefox/i.test(ua);
+  const isEdge = /edg/i.test(ua);
+  const isChrome = /chrome/i.test(ua) && !isEdge;
+  const isDesktop = !isIOS && !isAndroid;
+  return {isIOS, isAndroid, isSafari, isFirefox, isEdge, isChrome, isDesktop};
+}
+
+function installApp(){
+  // Path 1: native install prompt is available (Chromium/Android or
+  // Chromium/desktop that already offered it) — use it directly.
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+      deferredInstallPrompt = null;
+    });
+    return;
+  }
+
+  // Path 2: no native prompt available — show the right manual
+  // instructions for whatever browser/OS this looks like.
+  const p = detectPlatformForInstall();
+  let msg;
+  if (p.isIOS) {
+    msg = 'Paano i-install sa iPhone/iPad:\n\n1. Gamitin ang Safari (hindi Chrome)\n2. I-tap ang Share button (⬆️ sa ibaba ng screen)\n3. I-scroll pababa, i-tap "Add to Home Screen"\n4. I-tap "Add"\n\nLalabas na ang app icon sa Home Screen mo.';
+  } else if (p.isAndroid && p.isChrome) {
+    msg = 'Paano mag-install sa Android (Chrome):\n\n1. I-tap ang tatlong tuldok (⋮) sa kanang-itaas\n2. Hanapin at i-tap ang "Install app" o "Add to Home screen"\n3. I-tap "Install"\n\nKung wala kang makitang option na iyon, siguraduhing gamit mo si Chrome (hindi ibang browser) at na-refresh mo na ang page.';
+  } else if (p.isAndroid) {
+    msg = 'Paano mag-install sa Android:\n\n1. Buksan ang menu ng browser mo (karaniwang tatlong tuldok o linya)\n2. Hanapin ang "Add to Home screen" o "Install app"\n\nMas maganda kung gagamitin mo si Google Chrome para sa pinakamadaling install.';
+  } else if (p.isDesktop && (p.isChrome || p.isEdge)) {
+    msg = 'Paano mag-install sa Desktop (Chrome/Edge):\n\n1. Tignan ang address bar sa itaas ng browser\n2. Hanapin ang install icon (⊕ o katulad nito) sa kanang bahagi ng address bar\n3. I-click ito, tapos i-click "Install"\n\nKung hindi mo makita ang icon, i-refresh muna ang page.';
+  } else if (p.isDesktop && p.isSafari) {
+    msg = 'Sa Safari (Mac), hindi tuwirang sinusuportahan ang pag-install ng web app tulad ng Chrome. Puwede mo na lang i-bookmark ang page na ito (Cmd+D), o buksan ito gamit ang Chrome para sa install option.';
+  } else if (p.isFirefox) {
+    msg = 'Sa Firefox, hindi tuwirang sinusuportahan ang pag-install ng web app. Puwede mo na lang i-bookmark ang page na ito, o buksan ito gamit ang Chrome/Edge para sa install option.';
+  } else {
+    msg = 'Hindi awtomatikong sinusuportahan ng browser na ito ang pag-install. Subukan buksan ang site gamit ang Google Chrome para sa pinakamadaling paraan ng pag-install bilang app.';
+  }
+  alert(msg);
+}
 
 /* ================= MEDICAL DISCLAIMER (shown once per device) ================= */
 const DISCLAIMER_SEEN_KEY = 'herbalIS_disclaimerSeen_v1';
