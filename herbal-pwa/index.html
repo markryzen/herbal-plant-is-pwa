@@ -2440,7 +2440,7 @@ async function loadBundledTrainingData(){
     // No {cache:'no-store'} here on purpose — the service worker now caches
     // this file itself (stale-while-revalidate), so repeat visits load it
     // instantly from Cache Storage instead of re-downloading ~13MB.
-    const res = await fetch('./training-data.json');
+    const res = await fetch('herbal-training-data.json');
     if(!res.ok) return; // file doesn't exist — that's fine, not required
     const payload = await res.json();
     const bundled = payload.trainingData || payload;
@@ -3681,5 +3681,6 @@ function dismissDisclaimer(){
   }
 })();
 </script>
+<script type="module" src="firebase-auth.js"></script>
 </body>
 </html>

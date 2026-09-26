@@ -1,0 +1,40 @@
+IMPORTANT — BASAHIN MUNA BAGO MAG-DEPLOY
+==========================================
+
+Ang mga sumusunod na folder ay HINDI kasama sa zip na ito, dahil hindi sila
+na-upload nang matagumpay sa chat (nakita kong 0 bytes / walang laman ang
+mga placeholder para sa kanila):
+
+  - icons/            (app icons: icon-192.png, icon-512.png, atbp.)
+  - training-samples/ (kung meron kang mga larawan dito bukod sa
+                        training-data.json)
+
+KAILANGAN MO PA RIN ITONG I-COPY MULA SA ORIHINAL MONG PROJECT FOLDER
+papunta dito bago i-deploy/i-run, kung hindi ay hindi lalabas ang app icon
+at maaaring hindi mag-load nang tama ang manifest.
+
+Ang training-data.json (13MB) ay KASAMA na sa zip na ito.
+
+==========================================
+ANO ANG NAAYOS SA index.html (BUG FIX)
+==========================================
+
+PROBLEMA: Kapag nag-add/nag-edit ka ng plant sa Admin Panel habang HINDI PA
+naka-connect ang Firestore (mabagal na internet, bagong-bukas pa lang ang
+app, atbp.), ang pagbabago ay nase-save lang sa memory ng browser — kaya
+nawawala ito pag nag-refresh, at hindi rin nakikita ng ibang device.
+
+AYOS: Ngayon, bawat pag-save/delete sa Admin Panel ay:
+  1. Agad na naka-save sa localStorage ng device na iyon (hindi na
+     mawawala kahit i-refresh ang page, kahit hindi pa naka-Firestore).
+  2. Awtomatikong susubukang i-sync papunta sa Firestore sa sandaling
+     magkaroon ng matagumpay na koneksyon (walang kailangang i-type ulit).
+  3. May mas malinaw na alert message ngayon na nagsasabi kung
+     naka-connect ba talaga o "local-only" pa lang ang pagbabago.
+
+PAALALA PARA BUKAS: Bago mag-add ng bagong halaman sa depensa mo, pumunta
+muna sa About tab at siguraduhing "● Connected to Firestore (cloud)" ang
+lumalabas na status. Kung hindi, pindutin ang "Ulitin ang Koneksyon" muna.
+Kailangan din ng MATATAG NA INTERNET ang device na gagamitin mo, dahil
+kailangan nito ng live connection papunta sa Firebase para magsync sa
+lahat ng device.

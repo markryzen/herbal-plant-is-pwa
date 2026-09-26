@@ -1,0 +1,35 @@
+PAANO GAMITIN ANG DEPLOY.bat (ISANG CLICK LANG)
+==================================================
+
+1. I-EXTRACT itong buong zip file (kung hindi mo pa nagawa).
+
+2. Doble-click ang "DEPLOY.bat" na nasa loob ng folder na ito.
+
+3. Awtomatiko na nitong gagawin ang LAHAT:
+   - Kokopyahin ang bagong index.html papunta sa:
+     C:\Users\Patty\Desktop\herbal-plant-is-pwa\herbal-pwa
+   - git add, commit, push papunta sa GitHub
+   - netlify deploy --prod papunta sa herbalbscs.netlify.app
+
+4. Kapag may lumabas na "TAPOS NA!", buksan ang
+   https://herbalbscs.netlify.app sa INCOGNITO window para i-test.
+
+------------------------------------------------------------------
+KUNG MAY ERROR NA LUMABAS:
+------------------------------------------------------------------
+
+"[ERROR] Hindi nahanap ang ...\index.html"
+  -> Ibig sabihin, IBA ang eksaktong lokasyon ng git folder mo.
+     Buksan ang DEPLOY.bat gamit ang Notepad (right-click -> Edit),
+     hanapin ang linyang nagsisimula sa "set TARGET=", at palitan ng
+     TAMANG buong path patungo sa iyong "herbal-pwa" folder (yung
+     may .git na kasama, hindi yung extracted zip).
+
+"[ERROR] Nabigo ang git push"
+  -> Kailangan mo ng Personal Access Token bilang password. Sabihin
+     mo kay Claude, gagabayan ka niya gumawa nito.
+
+Kung gusto mong mag-double check bago mag-deploy, buksan muna ang
+DEPLOY.bat sa Notepad para basahin ang bawat hakbang - simpleng mga
+command lang ito (copy, git add/commit/push, netlify deploy), walang
+tinatago.
